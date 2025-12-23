@@ -1,0 +1,5 @@
+name: MCommandFramework
+version: '0.0.1'
+main: org.jasperdev.mcommandframework.MCommandFramework
+api-version: '1.21'
+authors: [ Jasper Green ]
