@@ -6,7 +6,7 @@ import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jasperdev.mcommandframework.api.MCommand;
 import org.jasperdev.mcommandframework.tree.MCmdNode;
-import org.jasperdev.mcommandframework.models.CommandContext;
+import org.jasperdev.mcommandframework.models.MCommandContext;
 import org.jasperdev.mcommandframework.models.OptionData;
 
 import javax.annotation.Nonnull;
@@ -74,7 +74,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 			}
 
 			if(currentNode.getExecutor() != null){
-				CommandContext context = new CommandContext(sender, command, label, collectedArgs);
+				MCommandContext context = new MCommandContext(sender, command, label, collectedArgs);
 				currentNode.getExecutor().execute(context);
 			} else {
 				sender.sendMessage("§cIncomplete command usage.");

@@ -1,6 +1,6 @@
 package org.jasperdev.mcommandframework.tree;
 
-import org.jasperdev.mcommandframework.models.CommandContext;
+import org.jasperdev.mcommandframework.models.MCommandContext;
 import org.jasperdev.mcommandframework.models.OptionData;
 
 import javax.annotation.Nonnull;
@@ -89,14 +89,24 @@ public class MCmdNode {
 		return this.executor != null;
 	}
 
-	public void run(@Nonnull CommandContext context){
+	public void run(@Nonnull MCommandContext context){
 		if(executor != null){
 			executor.execute(context);
 		}
 	}
 
+	public MCmdNode then(MCmdNode child) {
+		this.addChild(child);
+		return this;
+	}
+
+	public MCmdNode executes(MCmdExecutor executor) {
+		this.setExecutor(executor);
+		return this;
+	}
+
 	@FunctionalInterface
 	public interface MCmdExecutor {
-		void execute(CommandContext context);
+		void execute(MCommandContext context);
 	}
 }
