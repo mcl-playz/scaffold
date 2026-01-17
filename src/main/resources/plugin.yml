@@ -1,5 +1,5 @@
 name: MCommandFramework
-version: '1.2.1'
+version: '1.3.0'
 main: org.jasperdev.mcommandframework.MCommandFramework
 api-version: '1.21'
 load: STARTUP
