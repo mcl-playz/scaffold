@@ -18,13 +18,13 @@ public record MCommandContext(
 	@Nonnull
 	public <T> T getArg(String name, Class<T> clazz) {
 		// Use the optional logic internally, but throw if empty
-		return getOptionalArg(name, clazz)
+		return getOptionalArg(name.toLowerCase(), clazz)
 				.orElseThrow(() -> new NoSuchElementException("Argument '" + name + "' missing or wrong type"));
 	}
 
 	@Nonnull
 	public <T> Optional<T> getOptionalArg(String name, Class<T> clazz) {
-		Object val = args.get(name);
+		Object val = args.get(name.toLowerCase());
 		if (clazz.isInstance(val)) {
 			return Optional.of(clazz.cast(val));
 		}

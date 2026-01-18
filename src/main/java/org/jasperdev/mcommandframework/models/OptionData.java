@@ -45,7 +45,7 @@ public class OptionData {
 
     @Nonnull
     public String getName(){
-        return name;
+        return name.toLowerCase();
     }
 
     @Nonnull
