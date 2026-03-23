@@ -1,4 +1,4 @@
-package org.jasperdev.mcommandframework;
+package org.jasperdev.mcommandframework.api;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
@@ -6,53 +6,152 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jasperdev.mcommandframework.api.MCommand;
+import org.jasperdev.mcommandframework.annotations.Arg;
+import org.jasperdev.mcommandframework.annotations.Command;
+import org.jasperdev.mcommandframework.annotations.Permission;
+import org.jasperdev.mcommandframework.annotations.Sub;
 import org.jasperdev.mcommandframework.tree.MCmdNode;
 import org.jasperdev.mcommandframework.models.MCommandContext;
 import org.jasperdev.mcommandframework.models.OptionData;
+import org.jasperdev.mcommandframework.models.OptionData.ChoicesProvider;
 
 import javax.annotation.Nonnull;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.jasperdev.mcommandframework.models.OptionData.inferType;
+
 public class MCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
-	private final Map<String, MCmdNode> commandNodes = new HashMap<>();
+	private final Map<String, MCmdNode> commands = new HashMap<>();
 
 	public MCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
 	}
 
-	public void registerCommand(@Nonnull MCommand mCommand){
-		MCmdNode root = mCommand.setup();
-		String name = root.getName().toLowerCase();
-		commandNodes.put(name, root);
+	private Object[] buildArgs(Method method, MCommandContext ctx) {
+		List<Object> args = new ArrayList<>();
+		for (Parameter param : method.getParameters()) {
+			if (param.getType() == MCommandContext.class) {
+				args.add(ctx);
+			} else if (param.isAnnotationPresent(Arg.class)) {
+				Arg arg = param.getAnnotation(Arg.class);
+				args.add(ctx.getArg(arg.value(), param.getType()));
+			}
+		}
+		return args.toArray();
+	}
 
+	public MCmdNode buildCommandTree(@Nonnull MCommand instance){
+		Command command = instance.getClass().getAnnotation(Command.class);
+		MCmdNode root = new MCmdNode(command.value(), command.description());
+
+		for (Method method : instance.getClass().getDeclaredMethods()) {
+			if (!method.isAnnotationPresent(Sub.class)) continue;
+			method.setAccessible(true);
+
+			Sub sub = method.getAnnotation(Sub.class);
+			String[] parts = sub.value().split(" ");
+
+			// build path nodes
+			MCmdNode current = root;
+			for (int i = 0; i < parts.length; i++) {
+				String part = parts[i];
+				boolean isLast = i == parts.length - 1;
+
+				MCmdNode existing = current.getChild(part);
+				if (existing != null) {
+					current = existing;
+				} else {
+					MCmdNode newNode = new MCmdNode(part, isLast ? sub.description() : "");
+					current.addChild(newNode);
+					current = newNode;
+				}
+			}
+
+			// build arg nodes
+			Map<String, ChoicesProvider> choices = instance.choices();
+			for (Parameter param : method.getParameters()) {
+				if (!param.isAnnotationPresent(Arg.class)) continue;
+
+				Arg arg = param.getAnnotation(Arg.class);
+				OptionData option;
+
+				if (choices.containsKey(arg.value())) {
+					ChoicesProvider provider = choices.get(arg.value());
+					option = new OptionData(arg.value(), arg.value(), provider);
+				} else {
+					option = new OptionData(arg.value(), arg.value(), inferType(param.getType()));
+				}
+
+				MCmdNode argNode = new MCmdNode(option);
+				current.addChild(argNode);
+				current = argNode;
+			}
+
+			final MCmdNode leaf = current;
+			Permission classPermission = instance.getClass().getAnnotation(Permission.class);
+			Permission methodPermission = method.getAnnotation(Permission.class);
+			String permission = methodPermission != null ? methodPermission.value()
+					: classPermission != null ? classPermission.value()
+					: null;
+
+			leaf.setExecutor(ctx -> {
+				if (permission != null && !ctx.sender().hasPermission(permission)) {
+					ctx.sender().sendMessage("§cYou don't have permission to do that.");
+					return;
+				}
+				try {
+					method.invoke(instance, buildArgs(method, ctx));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		}
+
+		return root;
+	}
+
+	public void registerCommand(@Nonnull MCommand command){
+		if (!Modifier.isPublic(command.getClass().getModifiers())) {
+			throw new IllegalArgumentException(
+					command.getClass().getSimpleName() + " must be public to be registered as a command."
+			);
+		}
+
+		MCmdNode root = buildCommandTree(command);
+		Permission classPermission = command.getClass().getAnnotation(Permission.class);
+
+		// Register Command with Bukkit API
 		try{
 			Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
 			constructor.setAccessible(true);
 
-			PluginCommand pluginCommand = constructor.newInstance(name, plugin);
+			PluginCommand pluginCommand = constructor.newInstance(root.getName(), plugin);
 			pluginCommand.setExecutor(this);
 			pluginCommand.setTabCompleter(this);
+
+			if (classPermission != null) {
+				pluginCommand.setPermission(classPermission.value());
+			}
 
 			Field commandMapField = SimplePluginManager.class.getDeclaredField("commandMap");
 			commandMapField.setAccessible(true);
 			CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getPluginManager());
 
 			commandMap.register(plugin.getName(), pluginCommand);
+			commands.put(root.getName(), root);
 		} catch (Exception e){
-			plugin.getLogger().severe("Failed to register command: " + name);
+			plugin.getLogger().severe("Failed to register command: " + root.getName());
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String label, @Nonnull String[] args){
-		MCmdNode currentNode = commandNodes.get(command.getName().toLowerCase());
+	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull org.bukkit.command.Command command, @Nonnull String label, @Nonnull String[] args){
+		MCmdNode currentNode = commands.get(command.getName().toLowerCase());
 		if(currentNode == null) return false;
 
 		Map<String, Object> collectedArgs = new HashMap<>();
@@ -90,8 +189,8 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 	}
 
 	@Override
-	public List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String label, @Nonnull String[] args){
-		MCmdNode currentNode = commandNodes.get(command.getName().toLowerCase());
+	public List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull org.bukkit.command.Command command, @Nonnull String label, @Nonnull String[] args){
+		MCmdNode currentNode = commands.get(command.getName().toLowerCase());
 		if(currentNode == null) return null;
 
 		// Walk to the current typing level
