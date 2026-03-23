@@ -6,10 +6,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jasperdev.mcommandframework.annotations.Arg;
+import org.jasperdev.mcommandframework.annotations.*;
 import org.jasperdev.mcommandframework.annotations.Command;
-import org.jasperdev.mcommandframework.annotations.Permission;
-import org.jasperdev.mcommandframework.annotations.Sub;
+import org.jasperdev.mcommandframework.annotations.ExecutableBy.SenderType;
+import org.jasperdev.mcommandframework.models.MCommandManagerConfig;
 import org.jasperdev.mcommandframework.tree.MCmdNode;
 import org.jasperdev.mcommandframework.models.MCommandContext;
 import org.jasperdev.mcommandframework.models.OptionData;
@@ -97,6 +97,12 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 			String permission = methodPermission != null ? methodPermission.value()
 					: classPermission != null ? classPermission.value()
 					: null;
+
+			ExecutableBy methodExec = method.getAnnotation(ExecutableBy.class);
+			ExecutableBy classExec = instance.getClass().getAnnotation(ExecutableBy.class);
+			SenderType senderType = methodExec != null ? methodExec.value()
+					: classExec != null ? classExec.value()
+					: SenderType.ALL;
 
 			leaf.setExecutor(ctx -> {
 				if (permission != null && !ctx.sender().hasPermission(permission)) {
