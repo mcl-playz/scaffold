@@ -1,5 +1,7 @@
 package org.jasperdev.mcommandframework.models;
 
+import org.bukkit.entity.Player;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
@@ -10,7 +12,7 @@ public class OptionData {
     protected String description;
     protected OptionType type;
     protected List<String> choices;
-    protected Supplier<List<String>> dynamicChoices;
+    protected ChoicesProvider dynamicChoices;
 
     public enum OptionType {
         INTEGER,
@@ -32,7 +34,7 @@ public class OptionData {
         this.choices = choices;
     }
 
-    public OptionData(@Nonnull String name, @Nonnull String description, @Nonnull Supplier<List<String>> dynamicChoices) {
+    public OptionData(@Nonnull String name, @Nonnull String description, @Nonnull ChoicesProvider dynamicChoices) {
         this(name, description, OptionType.CHOICE);
         this.dynamicChoices = dynamicChoices;
     }
@@ -76,5 +78,18 @@ public class OptionData {
 			return dynamicChoices.get();
 		}
         return choices;
+    }
+
+    public static OptionType inferType(Class<?> paramType) {
+        if (paramType == int.class || paramType == Integer.class) return OptionType.INTEGER;
+        if (paramType == double.class || paramType == Double.class) return OptionType.DOUBLE;
+        if (paramType == float.class || paramType == Float.class) return OptionType.FLOAT;
+        if (paramType == Player.class) return OptionType.PLAYER;
+        return OptionType.STRING; // default
+    }
+
+    @FunctionalInterface
+    public interface ChoicesProvider {
+        List<String> get();
     }
 }
