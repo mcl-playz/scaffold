@@ -24,7 +24,7 @@ public class MCmdNode {
 		this.type = null;
 	}
 
-	// Constructor for an Option
+	// Constructor for an argument
 	public MCmdNode(@Nonnull OptionData data){
 		this.name = data.getName();
 		this.description = data.getDescription();
@@ -55,13 +55,13 @@ public class MCmdNode {
 	public MCmdNode addChild(@Nonnull MCmdNode node){
 		for(MCmdNode child : children){
 			if(child.getType() != null){
-				throw new IllegalStateException("Node already has an Option child. " +
-						"Options cannot have siblings.");
+				throw new IllegalStateException("Node already has an argument child. " +
+						"Arguments cannot have siblings.");
 			}
 
 			if(node.getType() != null){
-				throw new IllegalStateException("Cannot add an Option to a node " +
-						"that already has Subcommands.");
+				throw new IllegalStateException("Cannot add an argument to a node " +
+						"that already has subcommands.");
 			}
 
 			if(node.getType() == null && child.getName().equalsIgnoreCase(node.getName())){
@@ -70,6 +70,13 @@ public class MCmdNode {
 		}
 		this.children.add(node);
 		return this;
+	}
+
+	public @Nullable MCmdNode getChild(String name){
+		return children.stream()
+				.filter(child -> child.getName().equalsIgnoreCase(name))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public List<MCmdNode> getChildren(){
