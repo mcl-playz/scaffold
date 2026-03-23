@@ -32,14 +32,16 @@ public record MCommandContext(
 	}
 
 	/**
-	 * Gets either the command sender or the 'player' argument.
+	 * Gets the first {@link Player} argument, or falls back to the command sender.
 	 *
-	 * @implNote You need to create an argument named 'player' for this to work.
-	 * @return Sender of the command OR 'player' argument
+	 * @return The first Player argument if present, otherwise the sender cast to Player.
 	 */
 	@Nonnull
-	public Player getTarget(MCommandContext ctx) {
-			return ctx.getOptionalArg("player", Player.class)
-					.orElseGet(() -> (Player) ctx.sender());
+	public Player getTarget() {
+		return args.values().stream()
+				.filter(Player.class::isInstance)
+				.map(Player.class::cast)
+				.findFirst()
+				.orElseGet(() -> (Player) sender());
 	}
 }
