@@ -26,9 +26,15 @@ import static org.jasperdev.mcommandframework.models.OptionData.inferType;
 public class MCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
 	private final Map<String, MCmdNode> commands = new HashMap<>();
+	private MCommandManagerConfig config = new MCommandManagerConfig();
 
 	public MCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
+	}
+
+	public MCommandManager setConfig(MCommandManagerConfig config){
+		this.config = config;
+		return this;
 	}
 
 	private Object[] buildArgs(Method method, MCommandContext ctx) {
@@ -106,7 +112,15 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 
 			leaf.setExecutor(ctx -> {
 				if (permission != null && !ctx.sender().hasPermission(permission)) {
-					ctx.sender().sendMessage("§cYou don't have permission to do that.");
+					ctx.sender().sendMessage(config.formatError(config.getNoPermissionMessage()));
+					return;
+				}
+				if (senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)) {
+					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
+					return;
+				}
+				if (senderType == SenderType.CONSOLE && ctx.sender() instanceof Player) {
+					ctx.sender().sendMessage(config.formatError(config.getSenderNotConsoleMessage()));
 					return;
 				}
 				try {
@@ -167,7 +181,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				MCmdNode nextNode = findMatchingChild(currentNode, currentInput);
 
 				if(nextNode == null){
-					sender.sendMessage("§cUnknown argument: " + currentInput);
+					sender.sendMessage(config.formatError(config.parse(config.getUnknownArgumentMessage(), currentInput)));
 					return true;
 				}
 
@@ -184,11 +198,11 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				MCommandContext context = new MCommandContext(sender, command, label, collectedArgs);
 				currentNode.getExecutor().execute(context);
 			} else {
-				sender.sendMessage("§cIncomplete command usage.");
+				sender.sendMessage(config.formatError(config.getIncompleteCommandMessage()));
 			}
 
 		} catch (IllegalArgumentException e){
-			sender.sendMessage("§cError: " + e.getMessage());
+			sender.sendMessage(config.formatError(e.getMessage()));
 		}
 
 		return true;
