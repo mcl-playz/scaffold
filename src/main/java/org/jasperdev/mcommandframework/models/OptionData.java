@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class OptionData {
     protected String name;
@@ -88,6 +87,23 @@ public class OptionData {
         return OptionType.STRING; // default
     }
 
+    /**
+     * A functional interface that supplies a list of valid choices for a command argument.
+     * <p>
+     * Register providers by returning them from {@link org.jasperdev.mcommandframework.api.MCommand#choices()},
+     * keyed by the corresponding {@link org.jasperdev.mcommandframework.annotations.Arg#value()}.
+     * The returned values are used for both tab-completion and input validation.
+     *
+     * <pre>{@code
+     * // Example usage in an MCommand:
+     * public Map<String, ChoicesProvider> choices() {
+     *     return Map.of("gamemode", () -> List.of("survival", "creative", "adventure"));
+     * }
+     * }</pre>
+     *
+     * @see org.jasperdev.mcommandframework.api.MCommand#choices()
+     * @see org.jasperdev.mcommandframework.annotations.Arg
+     */
     @FunctionalInterface
     public interface ChoicesProvider {
         List<String> get();
