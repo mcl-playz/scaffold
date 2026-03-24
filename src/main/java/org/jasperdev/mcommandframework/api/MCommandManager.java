@@ -16,8 +16,11 @@ import org.jasperdev.mcommandframework.models.OptionData;
 import org.jasperdev.mcommandframework.models.OptionData.ChoicesProvider;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +47,11 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				args.add(ctx);
 			} else if (param.isAnnotationPresent(Arg.class)) {
 				Arg arg = param.getAnnotation(Arg.class);
-				args.add(ctx.getArg(arg.value(), param.getType()));
+				Object val = ctx.args().get(arg.value().toLowerCase());
+				if (val == null && !arg.optional()) {
+					throw new NoSuchElementException("Argument '" + arg.value() + "' missing");
+				}
+				args.add(val);
 			}
 		}
 		return args.toArray();
@@ -77,12 +84,26 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				}
 			}
 
-			// build arg nodes
+			// build arg nodes — optional args must be trailing
 			Map<String, ChoicesProvider> choices = instance.choices();
+			MCmdNode firstOptionalParent = null;
+			boolean seenOptional = false;
 			for (Parameter param : method.getParameters()) {
 				if (!param.isAnnotationPresent(Arg.class)) continue;
 
 				Arg arg = param.getAnnotation(Arg.class);
+				if (seenOptional && !arg.optional()) {
+					throw new IllegalArgumentException(
+							"Required argument '" + arg.value() + "' cannot follow optional arguments in @Sub(\"" + sub.value() + "\")"
+					);
+				}
+				if (arg.optional() && !param.isAnnotationPresent(Nullable.class)) {
+					throw new IllegalArgumentException(
+							"Optional argument '" + arg.value() + "' must be annotated @Nullable in @Sub(\"" + sub.value() + "\")"
+					);
+				}
+				seenOptional = arg.optional();
+
 				OptionData option;
 
 				if (choices.containsKey(arg.value())) {
@@ -92,29 +113,28 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 					option = new OptionData(arg.value(), arg.value(), inferType(param.getType()));
 				}
 
+				if (arg.optional() && firstOptionalParent == null) {
+					firstOptionalParent = current;
+				}
+
 				MCmdNode argNode = new MCmdNode(option);
 				current.addChild(argNode);
 				current = argNode;
 			}
 
-			final MCmdNode leaf = current;
-			Permission classPermission = instance.getClass().getAnnotation(Permission.class);
-			Permission methodPermission = method.getAnnotation(Permission.class);
-			String permission = methodPermission != null ? methodPermission.value()
-					: classPermission != null ? classPermission.value()
-					: null;
+			String permission = resolveAnnotation(
+					method.getAnnotation(Permission.class),
+					instance.getClass().getAnnotation(Permission.class),
+					Permission::value
+			);
+			SenderType senderType = resolveAnnotation(
+					method.getAnnotation(ExecutableBy.class),
+					instance.getClass().getAnnotation(ExecutableBy.class),
+					ExecutableBy::value,
+					SenderType.ALL
+			);
 
-			ExecutableBy methodExec = method.getAnnotation(ExecutableBy.class);
-			ExecutableBy classExec = instance.getClass().getAnnotation(ExecutableBy.class);
-			SenderType senderType = methodExec != null ? methodExec.value()
-					: classExec != null ? classExec.value()
-					: SenderType.ALL;
-
-			leaf.setExecutor(ctx -> {
-				if (permission != null && !ctx.sender().hasPermission(permission)) {
-					ctx.sender().sendMessage(config.formatError(config.getNoPermissionMessage()));
-					return;
-				}
+			MCmdNode.MCmdExecutor exec = ctx -> {
 				if (senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)) {
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
 					return;
@@ -123,29 +143,39 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotConsoleMessage()));
 					return;
 				}
+				if (permission != null && !ctx.sender().hasPermission(permission)) {
+					ctx.sender().sendMessage(config.formatError(config.getNoPermissionMessage()));
+					return;
+				}
 				try {
 					method.invoke(instance, buildArgs(method, ctx));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			});
+			};
+
+			current.setExecutor(exec);
+			if (firstOptionalParent != null) {
+				firstOptionalParent.setExecutor(exec);
+			}
 		}
 
 		return root;
 	}
 
 	public void registerCommand(@Nonnull MCommand command){
-		if (!Modifier.isPublic(command.getClass().getModifiers())) {
-			throw new IllegalArgumentException(
-					command.getClass().getSimpleName() + " must be public to be registered as a command."
-			);
-		}
+		String commandName = command.getClass().getSimpleName();
+		try {
+			if (!Modifier.isPublic(command.getClass().getModifiers())) {
+				throw new IllegalArgumentException(
+						commandName + " must be public to be registered as a command."
+				);
+			}
 
-		MCmdNode root = buildCommandTree(command);
-		Permission classPermission = command.getClass().getAnnotation(Permission.class);
+			MCmdNode root = buildCommandTree(command);
+			commandName = root.getName();
+			Permission classPermission = command.getClass().getAnnotation(Permission.class);
 
-		// Register Command with Bukkit API
-		try{
 			Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
 			constructor.setAccessible(true);
 
@@ -163,9 +193,8 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 
 			commandMap.register(plugin.getName(), pluginCommand);
 			commands.put(root.getName(), root);
-		} catch (Exception e){
-			plugin.getLogger().severe("Failed to register command: " + root.getName());
-			e.printStackTrace();
+		} catch (Exception e) {
+			plugin.getLogger().severe("Failed to register command '" + commandName + "': " + e.getMessage());
 		}
 	}
 
@@ -259,6 +288,17 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 			}
 		}
 		return null;
+	}
+
+	@Nullable
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor) {
+		return resolveAnnotation(method, clazz, extractor, null);
+	}
+
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor, V defaultValue) {
+		if (method != null) return extractor.apply(method);
+		if (clazz != null) return extractor.apply(clazz);
+		return defaultValue;
 	}
 
 	private Object parseArgument(MCmdNode node, String input) throws IllegalArgumentException{
