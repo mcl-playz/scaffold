@@ -12,8 +12,8 @@ public final class CommandNode {
 	private final String name;
 	private final String description;
 	private final ArgumentData.ArgumentType type;
-	private ArgumentData optionData;
-	private MCmdExecutor executor;
+	private ArgumentData argumentData;
+	private ScaffoldCommandExecutor executor;
 
 	private final List<CommandNode> children = new ArrayList<>();
 
@@ -29,7 +29,7 @@ public final class CommandNode {
 		this.name = data.getName();
 		this.description = data.getDescription();
 		this.type = data.getType();
-		this.optionData = data;
+		this.argumentData = data;
 	}
 
 	@Nonnull
@@ -48,8 +48,8 @@ public final class CommandNode {
 	}
 
 	@Nullable
-	public ArgumentData getOptionData(){
-		return optionData;
+	public ArgumentData getArgumentData(){
+		return argumentData;
 	}
 
 	public CommandNode addChild(@Nonnull CommandNode node){
@@ -83,13 +83,13 @@ public final class CommandNode {
 		return children;
 	}
 
-	public CommandNode setExecutor(@Nonnull MCmdExecutor executor){
+	public CommandNode setExecutor(@Nonnull ScaffoldCommandExecutor executor){
 		this.executor = executor;
 		return this;
 	}
 
 	@Nullable
-	public MCmdExecutor getExecutor(){
+	public ScaffoldCommandExecutor getExecutor(){
 		return executor;
 	}
 
@@ -104,7 +104,7 @@ public final class CommandNode {
 	}
 
 	@FunctionalInterface
-	public interface MCmdExecutor {
+	public interface ScaffoldCommandExecutor {
 		void execute(CommandContext context);
 	}
 }

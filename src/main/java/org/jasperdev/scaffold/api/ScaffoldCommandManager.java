@@ -160,7 +160,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 					SenderType.ALL
 			);
 
-			CommandNode.MCmdExecutor exec = ctx -> {
+			CommandNode.ScaffoldCommandExecutor exec = ctx -> {
 				if(senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)){
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
 					return;
@@ -253,7 +253,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 					// Handle specific argument types
 					return switch(type){
 						case CHOICE -> {
-							ArgumentData data = child.getOptionData();
+							ArgumentData data = child.getArgumentData();
 							yield (data != null && data.getChoices() != null)
 									? data.getChoices().stream()
 									: Stream.empty();
@@ -327,7 +327,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 		try {
 			return switch(type){
 				case CHOICE -> {
-					List<String> allowed = (node.getOptionData() != null) ? node.getOptionData().getChoices() : null;
+					List<String> allowed = (node.getArgumentData() != null) ? node.getArgumentData().getChoices() : null;
 					if(allowed == null || allowed.stream().noneMatch(s -> s.equalsIgnoreCase(input))){
 						throw new IllegalArgumentException(config.parse(config.getUnknownOptionMessage(), allowed.toString()));
 					}

@@ -25,7 +25,7 @@ public final class HelpGenerator {
 	private static void walkTree(CommandNode node, String path, String lastDescription, List<String[]> output){
 		String description = node.getType() == null ? node.getDescription() : lastDescription;
 		boolean hasOnlyOptionalChildren = !node.getChildren().isEmpty()
-				&& node.getChildren().stream().allMatch(c -> c.getOptionData() != null && c.getOptionData().isOptional());
+				&& node.getChildren().stream().allMatch(c -> c.getArgumentData() != null && c.getArgumentData().isOptional());
 		if(node.getExecutor() != null && !hasOnlyOptionalChildren){
 			output.add(new String[]{path, description});
 		}
@@ -41,7 +41,7 @@ public final class HelpGenerator {
 		String argDisplay = child.getType() != ArgumentData.ArgumentType.CHOICE
 				? child.getType().toString().toLowerCase()
 				: child.getName();
-		boolean optional = child.getOptionData() != null && child.getOptionData().isOptional();
+		boolean optional = child.getArgumentData() != null && child.getArgumentData().isOptional();
 		return optional
 				? path + " §6[<§r" + argDisplay + "§6>]§r"
 				: path + " §e<§r" + argDisplay + "§e>§r";
