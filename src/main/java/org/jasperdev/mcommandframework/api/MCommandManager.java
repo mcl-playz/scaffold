@@ -10,6 +10,7 @@ import org.jasperdev.mcommandframework.annotations.*;
 import org.jasperdev.mcommandframework.annotations.Command;
 import org.jasperdev.mcommandframework.annotations.ExecutableBy.SenderType;
 import org.jasperdev.mcommandframework.models.MCommandManagerConfig;
+import org.jasperdev.mcommandframework.tree.HelpGenerator;
 import org.jasperdev.mcommandframework.tree.MCmdNode;
 import org.jasperdev.mcommandframework.models.MCommandContext;
 import org.jasperdev.mcommandframework.models.OptionData;
@@ -54,18 +55,9 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 			Permission classPermission = command.getClass().getAnnotation(Permission.class);
 
 			if(config.canAutoInjectHelp()){
-				MCmdNode helpNode = new MCmdNode("help", "Usage for command").setExecutor((ctx) -> {
-					List<String[]> entries = new ArrayList<>();
-					walkTree(root, root.getName(), root.getDescription(), entries);
-					entries.sort(Comparator.comparing(e -> e[0]));
-					List<String> lines = new ArrayList<>();
-					lines.add("§6--- Help ---");
-					for (String[] entry : entries) {
-						lines.add("§e/§r" + entry[0]);
-						lines.add("§8  » §7" + entry[1]);
-					}
-					ctx.sender().sendMessage(lines.toArray(new String[0]));
-				});
+				MCmdNode helpNode = new MCmdNode("help", "Usage for command").setExecutor(ctx ->
+						ctx.sender().sendMessage(HelpGenerator.generate(root))
+				);
 				root.addChild(helpNode);
 			}
 
@@ -283,29 +275,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 		commandMap.register(plugin.getName(), pluginCommand);
 	}
 
-	private void walkTree(MCmdNode node, String path, String lastDescription, List<String[]> output) {
-		String description = node.getType() == null ? node.getDescription() : lastDescription;
-		boolean hasOnlyOptionalChildren = !node.getChildren().isEmpty()
-				&& node.getChildren().stream().allMatch(c -> c.getOptionData() != null && c.getOptionData().isOptional());
-		if (node.getExecutor() != null && !hasOnlyOptionalChildren) {
-			output.add(new String[]{path, description});
-		}
-		for (MCmdNode child : node.getChildren()) {
-			String childPath;
-			if (child.getType() != null) {
-				String argDisplay = child.getType() != OptionData.OptionType.CHOICE
-						? child.getType().toString().toLowerCase()
-						: child.getName();
-				boolean optional = child.getOptionData() != null && child.getOptionData().isOptional();
-				childPath = optional
-						? path + " §6[<§r" + argDisplay + "§6>]§r"
-						: path + " §e<§r" + argDisplay + "§e>§r";
-			} else {
-				childPath = path + " " + child.getName();
-			}
-			walkTree(child, childPath, description, output);
-		}
-	}
+
 
 	private Object[] buildArgs(Method method, MCommandContext ctx) {
 		List<Object> args = new ArrayList<>();
