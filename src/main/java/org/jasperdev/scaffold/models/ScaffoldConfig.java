@@ -1,6 +1,11 @@
 package org.jasperdev.scaffold.models;
 
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jasperdev.scaffold.api.ScaffoldExceptionHandler;
+
 public class ScaffoldConfig {
+	private JavaPlugin plugin;
+
 	private String errorMessage = "§c§lERROR §8|§r§7 %s";
 	private String noPermissionMessage = "You don't have permission to execute that command!";
 	private String unknownSubcommandMessage = "Unknown subcommand: %s";
@@ -8,7 +13,17 @@ public class ScaffoldConfig {
 	private String senderNotConsoleMessage = "This command can only be run from the console!";
 	private String senderNotPlayerMessage = "This command can only be run by a player!";
 	private String unknownOptionMessage = "Unknown option. Please choose from the following: %s";
+
 	private boolean autoInjectHelp = true;
+
+	private ScaffoldExceptionHandler exceptionHandler = ((sender, e) -> {
+		if(sender != null) sender.sendMessage("An internal error occurred.");
+		plugin.getLogger().severe(e.getMessage());
+	});
+
+	public ScaffoldConfig(JavaPlugin plugin){
+		this.plugin = plugin;
+	}
 
 	public String parse(String base, String input){
 		return String.format(base, input);
@@ -88,5 +103,13 @@ public class ScaffoldConfig {
 	public ScaffoldConfig setUnknownOptionMessage(String unknownOptionMessage){
 		this.unknownOptionMessage = unknownOptionMessage;
 		return this;
+	}
+
+	public ScaffoldExceptionHandler getExceptionHandler(){
+		return exceptionHandler;
+	}
+
+	public void setExceptionHandler(ScaffoldExceptionHandler exceptionHandler){
+		this.exceptionHandler = exceptionHandler;
 	}
 }
