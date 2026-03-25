@@ -1,31 +1,31 @@
-package org.jasperdev.mcommandframework.tree;
+package org.jasperdev.scaffold.tree;
 
-import org.jasperdev.mcommandframework.models.MCommandContext;
-import org.jasperdev.mcommandframework.models.OptionData;
+import org.jasperdev.scaffold.models.ArgumentData;
+import org.jasperdev.scaffold.models.CommandContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class MCmdNode {
+public final class CommandNode {
 	private final String name;
 	private final String description;
-	private final OptionData.OptionType type;
-	private OptionData optionData;
+	private final ArgumentData.ArgumentType type;
+	private ArgumentData optionData;
 	private MCmdExecutor executor;
 
-	private final List<MCmdNode> children = new ArrayList<>();
+	private final List<CommandNode> children = new ArrayList<>();
 
 	// Constructor for a Literal Subcommand
-	public MCmdNode(String name, String description){
+	public CommandNode(String name, String description){
 		this.name = name;
 		this.description = description;
 		this.type = null;
 	}
 
 	// Constructor for an argument
-	public MCmdNode(@Nonnull OptionData data){
+	public CommandNode(@Nonnull ArgumentData data){
 		this.name = data.getName();
 		this.description = data.getDescription();
 		this.type = data.getType();
@@ -43,17 +43,17 @@ public final class MCmdNode {
 	}
 
 	@Nullable
-	public OptionData.OptionType getType(){
+	public ArgumentData.ArgumentType getType(){
 		return type;
 	}
 
 	@Nullable
-	public OptionData getOptionData(){
+	public ArgumentData getOptionData(){
 		return optionData;
 	}
 
-	public MCmdNode addChild(@Nonnull MCmdNode node){
-		for(MCmdNode child : children){
+	public CommandNode addChild(@Nonnull CommandNode node){
+		for(CommandNode child : children){
 			if(child.getType() != null){
 				throw new IllegalStateException("Node already has an argument child. " +
 						"Arguments cannot have siblings.");
@@ -72,18 +72,18 @@ public final class MCmdNode {
 		return this;
 	}
 
-	public @Nullable MCmdNode getChild(String name){
+	public @Nullable CommandNode getChild(String name){
 		return children.stream()
 				.filter(child -> child.getName().equalsIgnoreCase(name))
 				.findFirst()
 				.orElse(null);
 	}
 
-	public List<MCmdNode> getChildren(){
+	public List<CommandNode> getChildren(){
 		return children;
 	}
 
-	public MCmdNode setExecutor(@Nonnull MCmdExecutor executor){
+	public CommandNode setExecutor(@Nonnull MCmdExecutor executor){
 		this.executor = executor;
 		return this;
 	}
@@ -97,7 +97,7 @@ public final class MCmdNode {
 		return this.executor != null;
 	}
 
-	public void run(@Nonnull MCommandContext context){
+	public void run(@Nonnull CommandContext context){
 		if(executor != null){
 			executor.execute(context);
 		}
@@ -105,6 +105,6 @@ public final class MCmdNode {
 
 	@FunctionalInterface
 	public interface MCmdExecutor {
-		void execute(MCommandContext context);
+		void execute(CommandContext context);
 	}
 }

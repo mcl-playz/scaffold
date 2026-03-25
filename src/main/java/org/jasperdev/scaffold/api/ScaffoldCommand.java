@@ -1,16 +1,16 @@
-package org.jasperdev.mcommandframework.api;
+package org.jasperdev.scaffold.api;
 
-import org.jasperdev.mcommandframework.models.OptionData.ChoicesProvider;
+import org.jasperdev.scaffold.models.ArgumentData.ChoicesProvider;
 
 import java.util.Map;
 
 /**
  * Represents an executable command within the MCommandFramework.
  *
- * @see org.jasperdev.mcommandframework.annotations.Command
- * @see org.jasperdev.mcommandframework.annotations.Sub
+ * @see org.jasperdev.scaffold.annotations.Command
+ * @see org.jasperdev.scaffold.annotations.Sub
  */
-public interface MCommand {
+public interface ScaffoldCommand {
 	/**
 	 * Provides a mapping of selection keys to their corresponding {@link ChoicesProvider}.
 	 * <p>

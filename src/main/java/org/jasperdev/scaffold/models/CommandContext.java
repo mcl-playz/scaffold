@@ -1,4 +1,4 @@
-package org.jasperdev.mcommandframework.models;
+package org.jasperdev.scaffold.models;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
-public record MCommandContext(
+public record CommandContext(
 		@Nonnull CommandSender sender,
 		@Nonnull Command command,
 		@Nonnull String label,

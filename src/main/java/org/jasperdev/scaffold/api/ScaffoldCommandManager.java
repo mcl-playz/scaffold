@@ -1,4 +1,4 @@
-package org.jasperdev.mcommandframework.api;
+package org.jasperdev.scaffold.api;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
@@ -6,15 +6,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jasperdev.mcommandframework.annotations.*;
-import org.jasperdev.mcommandframework.annotations.Command;
-import org.jasperdev.mcommandframework.annotations.ExecutableBy.SenderType;
-import org.jasperdev.mcommandframework.models.MCommandManagerConfig;
-import org.jasperdev.mcommandframework.tree.HelpGenerator;
-import org.jasperdev.mcommandframework.tree.MCmdNode;
-import org.jasperdev.mcommandframework.models.MCommandContext;
-import org.jasperdev.mcommandframework.models.OptionData;
-import org.jasperdev.mcommandframework.models.OptionData.ChoicesProvider;
+import org.jasperdev.scaffold.annotations.*;
+import org.jasperdev.scaffold.annotations.Command;
+import org.jasperdev.scaffold.annotations.ExecutableBy.SenderType;
+import org.jasperdev.scaffold.models.ArgumentData;
+import org.jasperdev.scaffold.models.ArgumentData.ChoicesProvider;
+import org.jasperdev.scaffold.models.CommandContext;
+import org.jasperdev.scaffold.models.ScaffoldConfig;
+import org.jasperdev.scaffold.tree.CommandNode;
+import org.jasperdev.scaffold.tree.HelpGenerator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,23 +25,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.jasperdev.mcommandframework.models.OptionData.inferType;
+import static org.jasperdev.scaffold.models.ArgumentData.inferType;
 
-public final class MCommandManager implements CommandExecutor, TabCompleter {
+public final class ScaffoldCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
-	private final Map<String, MCmdNode> commands = new HashMap<>();
-	private MCommandManagerConfig config = new MCommandManagerConfig();
+	private final Map<String, CommandNode> commands = new HashMap<>();
+	private ScaffoldConfig config = new ScaffoldConfig();
 
-	public MCommandManager(@Nonnull JavaPlugin plugin){
+	public ScaffoldCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
 	}
 
-	public MCommandManager setConfig(MCommandManagerConfig config){
+	public ScaffoldCommandManager setConfig(ScaffoldConfig config){
 		this.config = config;
 		return this;
 	}
 
-	public void registerCommand(@Nonnull MCommand command){
+	public void registerCommand(@Nonnull ScaffoldCommand command){
 		String commandName = command.getClass().getSimpleName();
 		try {
 			if(!Modifier.isPublic(command.getClass().getModifiers())){
@@ -50,12 +50,12 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 				);
 			}
 
-			MCmdNode root = buildCommandTree(command);
+			CommandNode root = buildCommandTree(command);
 			commandName = root.getName();
 			Permission classPermission = command.getClass().getAnnotation(Permission.class);
 
 			if(config.canAutoInjectHelp()){
-				MCmdNode helpNode = new MCmdNode("help", "Usage for command").setExecutor(ctx ->
+				CommandNode helpNode = new CommandNode("help", "Usage for command").setExecutor(ctx ->
 						ctx.sender().sendMessage(HelpGenerator.generate(root))
 				);
 				root.addChild(helpNode);
@@ -68,9 +68,9 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		}
 	}
 
-	private MCmdNode buildCommandTree(@Nonnull MCommand instance){
+	private CommandNode buildCommandTree(@Nonnull ScaffoldCommand instance){
 		Command command = instance.getClass().getAnnotation(Command.class);
-		MCmdNode root = new MCmdNode(command.value(), command.description());
+		CommandNode root = new CommandNode(command.value(), command.description());
 		boolean rootRegistered = false;
 
 		for(Method method : instance.getClass().getDeclaredMethods()){
@@ -90,7 +90,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			}
 
 			Sub sub = method.getAnnotation(Sub.class);
-			MCmdNode current = root;
+			CommandNode current = root;
 
 			if(sub != null){
 				String[] parts = sub.value().split(" ");
@@ -98,11 +98,11 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					String part = parts[i];
 					boolean isLast = i == parts.length - 1;
 
-					MCmdNode existing = current.getChild(part);
+					CommandNode existing = current.getChild(part);
 					if(existing != null){
 						current = existing;
 					} else {
-						MCmdNode newNode = new MCmdNode(part, isLast ? sub.description() : "");
+						CommandNode newNode = new CommandNode(part, isLast ? sub.description() : "");
 						current.addChild(newNode);
 						current = newNode;
 					}
@@ -111,7 +111,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 			// build arg nodes — optional args must be trailing
 			Map<String, ChoicesProvider> choices = instance.choices();
-			MCmdNode firstOptionalParent = null;
+			CommandNode firstOptionalParent = null;
 			boolean seenOptional = false;
 			for(Parameter param : method.getParameters()){
 				if(!param.isAnnotationPresent(Arg.class)) continue;
@@ -129,13 +129,13 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 				}
 				seenOptional = arg.optional();
 
-				OptionData option;
+				ArgumentData option;
 
 				if(choices.containsKey(arg.value())){
 					ChoicesProvider provider = choices.get(arg.value());
-					option = new OptionData(arg.value(), arg.value(), provider);
+					option = new ArgumentData(arg.value(), arg.value(), provider);
 				} else {
-					option = new OptionData(arg.value(), arg.value(), inferType(param.getType()));
+					option = new ArgumentData(arg.value(), arg.value(), inferType(param.getType()));
 				}
 				option.setOptional(arg.optional());
 
@@ -143,7 +143,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					firstOptionalParent = current;
 				}
 
-				MCmdNode argNode = new MCmdNode(option);
+				CommandNode argNode = new CommandNode(option);
 				current.addChild(argNode);
 				current = argNode;
 			}
@@ -160,7 +160,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					SenderType.ALL
 			);
 
-			MCmdNode.MCmdExecutor exec = ctx -> {
+			CommandNode.MCmdExecutor exec = ctx -> {
 				if(senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)){
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
 					return;
@@ -191,14 +191,14 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 	@Override
 	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull org.bukkit.command.Command command, @Nonnull String label, @Nonnull String[] args){
-		MCmdNode currentNode = commands.get(command.getName().toLowerCase());
+		CommandNode currentNode = commands.get(command.getName().toLowerCase());
 		if(currentNode == null) return false;
 
 		Map<String, Object> collectedArgs = new HashMap<>();
 
 		try {
 			for(String currentInput : args){
-				MCmdNode nextNode = findMatchingChild(currentNode, currentInput);
+				CommandNode nextNode = findMatchingChild(currentNode, currentInput);
 
 				if(nextNode == null){
 					sender.sendMessage(config.formatError(config.parse(config.getUnknownSubcommandMessage(), currentInput)));
@@ -215,7 +215,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			}
 
 			if(currentNode.getExecutor() != null){
-				MCommandContext context = new MCommandContext(sender, command, label, collectedArgs);
+				CommandContext context = new CommandContext(sender, command, label, collectedArgs);
 				currentNode.getExecutor().execute(context);
 			} else {
 				sender.sendMessage(config.formatError(config.getIncompleteCommandMessage()));
@@ -230,7 +230,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 	@Override
 	public List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull org.bukkit.command.Command command, @Nonnull String label, @Nonnull String[] args){
-		MCmdNode currentNode = commands.get(command.getName().toLowerCase());
+		CommandNode currentNode = commands.get(command.getName().toLowerCase());
 		if(currentNode == null) return null;
 
 		// Walk to the current typing level
@@ -243,7 +243,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 		return currentNode.getChildren().stream()
 				.flatMap(child -> {
-					OptionData.OptionType type = child.getType();
+					ArgumentData.ArgumentType type = child.getType();
 
 					// Literal Subcommands (type is null)
 					if(type == null){
@@ -253,7 +253,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					// Handle specific argument types
 					return switch(type){
 						case CHOICE -> {
-							OptionData data = child.getOptionData();
+							ArgumentData data = child.getOptionData();
 							yield (data != null && data.getChoices() != null)
 									? data.getChoices().stream()
 									: Stream.empty();
@@ -268,7 +268,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 				.collect(Collectors.toList());
 	}
 
-	private void registerBukkitCommand(MCmdNode root, Permission permission) throws Exception{
+	private void registerBukkitCommand(CommandNode root, Permission permission) throws Exception{
 		Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
 		constructor.setAccessible(true);
 
@@ -289,10 +289,10 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		commandMap.register(plugin.getName(), pluginCommand);
 	}
 
-	private Object[] buildArgs(Method method, MCommandContext ctx){
+	private Object[] buildArgs(Method method, CommandContext ctx){
 		List<Object> args = new ArrayList<>();
 		for(Parameter param : method.getParameters()){
-			if(param.getType() == MCommandContext.class){
+			if(param.getType() == CommandContext.class){
 				args.add(ctx);
 			} else if(param.isAnnotationPresent(Arg.class)){
 				Arg arg = param.getAnnotation(Arg.class);
@@ -306,8 +306,8 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		return args.toArray();
 	}
 
-	private MCmdNode findMatchingChild(MCmdNode parent, String input){
-		for(MCmdNode child : parent.getChildren()){
+	private CommandNode findMatchingChild(CommandNode parent, String input){
+		for(CommandNode child : parent.getChildren()){
 			// Literal match
 			if(child.getType() == null && child.getName().equalsIgnoreCase(input)){
 				return child;
@@ -320,8 +320,8 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		return null;
 	}
 
-	private Object parseArgument(MCmdNode node, String input) throws IllegalArgumentException{
-		OptionData.OptionType type = node.getType();
+	private Object parseArgument(CommandNode node, String input) throws IllegalArgumentException{
+		ArgumentData.ArgumentType type = node.getType();
 		if(type == null) return input;
 
 		try {
