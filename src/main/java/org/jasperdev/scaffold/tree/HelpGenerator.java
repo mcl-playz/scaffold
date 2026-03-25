@@ -13,11 +13,19 @@ public final class HelpGenerator {
 		entries.sort(Comparator.comparing(e -> e[0]));
 
 		List<String> lines = new ArrayList<>();
-		lines.add("§6--- Help ---");
-		for(String[] entry : entries){
-			lines.add("§e/§r" + entry[0]);
-			lines.add("§8  » §7" + entry[1]);
+		lines.add("§8§m----§r §6/" + root.getName() + " §7commands §8§m----§r");
+
+		for(int i = 0; i < entries.size(); i++){
+			String[] entry = entries.get(i);
+			lines.add(" §e/" + entry[0]);
+			lines.add("   §8» §7" + entry[1]);
+
+			if(i < entries.size() - 1){
+				lines.add("");
+			}
 		}
+
+		lines.add("§8§m--------------------------§r");
 		return lines.toArray(new String[0]);
 	}
 
