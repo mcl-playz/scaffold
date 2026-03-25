@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class HelpGenerator {
-
 	public static String[] generate(CommandNode root){
 		List<String[]> entries = new ArrayList<>();
 		walkTree(root, root.getName(), root.getDescription(), entries);
