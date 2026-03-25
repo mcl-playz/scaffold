@@ -55,9 +55,15 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 
 			if(config.canAutoInjectHelp()){
 				MCmdNode helpNode = new MCmdNode("help", "Usage for command").setExecutor((ctx) -> {
+					List<String[]> entries = new ArrayList<>();
+					walkTree(root, root.getName(), root.getDescription(), entries);
+					entries.sort(Comparator.comparing(e -> e[0]));
 					List<String> lines = new ArrayList<>();
 					lines.add("§6--- Help ---");
-					walkTree(root, "/" + root.getName(), lines);
+					for (String[] entry : entries) {
+						lines.add("§e/§r" + entry[0]);
+						lines.add("§8  » §7" + entry[1]);
+					}
 					ctx.sender().sendMessage(lines.toArray(new String[0]));
 				});
 				root.addChild(helpNode);
@@ -125,6 +131,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				} else {
 					option = new OptionData(arg.value(), arg.value(), inferType(param.getType()));
 				}
+				option.setOptional(arg.optional());
 
 				if (arg.optional() && firstOptionalParent == null) {
 					firstOptionalParent = current;
@@ -276,15 +283,27 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 		commandMap.register(plugin.getName(), pluginCommand);
 	}
 
-	private void walkTree(MCmdNode node, String path, List<String> output) {
-		if (node.getExecutor() != null) {
-			output.add(path + " - " + node.getDescription());
+	private void walkTree(MCmdNode node, String path, String lastDescription, List<String[]> output) {
+		String description = node.getType() == null ? node.getDescription() : lastDescription;
+		boolean hasOnlyOptionalChildren = !node.getChildren().isEmpty()
+				&& node.getChildren().stream().allMatch(c -> c.getOptionData() != null && c.getOptionData().isOptional());
+		if (node.getExecutor() != null && !hasOnlyOptionalChildren) {
+			output.add(new String[]{path, description});
 		}
 		for (MCmdNode child : node.getChildren()) {
-			String childPath = child.getType() != null
-					? path + " <" + child.getType().toString().toLowerCase() + ">"
-					: path + " " + child.getName();
-			walkTree(child, childPath, output);
+			String childPath;
+			if (child.getType() != null) {
+				String argDisplay = child.getType() != OptionData.OptionType.CHOICE
+						? child.getType().toString().toLowerCase()
+						: child.getName();
+				boolean optional = child.getOptionData() != null && child.getOptionData().isOptional();
+				childPath = optional
+						? path + " §6[<§r" + argDisplay + "§6>]§r"
+						: path + " §e<§r" + argDisplay + "§e>§r";
+			} else {
+				childPath = path + " " + child.getName();
+			}
+			walkTree(child, childPath, description, output);
 		}
 	}
 
