@@ -10,6 +10,7 @@ public class OptionData {
     protected String name;
     protected String description;
     protected OptionType type;
+    protected boolean optional;
     protected List<String> choices;
     protected ChoicesProvider dynamicChoices;
 
@@ -70,6 +71,15 @@ public class OptionData {
     @Nonnull
     public OptionType getType(){
         return type;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public OptionData setOptional(boolean optional) {
+        this.optional = optional;
+        return this;
     }
 
     @Nullable
