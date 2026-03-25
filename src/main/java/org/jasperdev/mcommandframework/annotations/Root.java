@@ -9,8 +9,7 @@ import java.lang.annotation.Target;
  * Marks a method as the root executor of a command.
  * <p>
  * The annotated method will be invoked when the base command is executed
- * with no subcommand arguments. It follows the same rules as {@link Sub}
- * regarding parameter binding, {@link Permission}, and {@link ExecutableBy}.
+ * with no subcommand arguments. It is practically identical to {@link Sub}.
  * <p>
  * Only one method per {@link Command} class should be annotated with {@code @Root}.
  * If multiple methods are annotated, behaviour is undefined as the last one
