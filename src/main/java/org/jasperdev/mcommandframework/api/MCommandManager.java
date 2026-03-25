@@ -275,6 +275,8 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		PluginCommand pluginCommand = constructor.newInstance(root.getName(), plugin);
 		pluginCommand.setExecutor(this);
 		pluginCommand.setTabCompleter(this);
+		pluginCommand.setDescription(root.getDescription());
+		pluginCommand.setUsage("/" + root.getName() + " help");
 
 		if(permission != null){
 			pluginCommand.setPermission(permission.value());
