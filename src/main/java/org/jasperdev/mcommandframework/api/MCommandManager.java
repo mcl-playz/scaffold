@@ -347,7 +347,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				case CHOICE -> {
 					List<String> allowed = (node.getOptionData() != null) ? node.getOptionData().getChoices() : null;
 					if(allowed == null || allowed.stream().noneMatch(s -> s.equalsIgnoreCase(input))){
-						throw new IllegalArgumentException("Invalid choice.");
+						throw new IllegalArgumentException(config.parse(config.getUnknownOptionMessage(), allowed.toString()));
 					}
 					yield input.toLowerCase();
 				}

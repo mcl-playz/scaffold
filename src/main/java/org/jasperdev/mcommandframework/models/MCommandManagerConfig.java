@@ -7,6 +7,7 @@ public class MCommandManagerConfig {
     private String incompleteCommandMessage = "Incomplete command usage";
     private String senderNotConsoleMessage = "This command can only be run from the console!";
     private String senderNotPlayerMessage = "This command can only be run by a player!";
+    private String unknownOptionMessage = "Unknown option: %s";
     private boolean autoInjectHelp = true;
 
     public String parse(String base, String input){
@@ -77,6 +78,15 @@ public class MCommandManagerConfig {
 
     public MCommandManagerConfig setAutoInjectHelp(boolean autoInjectHelp) {
         this.autoInjectHelp = autoInjectHelp;
+        return this;
+    }
+
+    public String getUnknownOptionMessage() {
+        return unknownOptionMessage;
+    }
+
+    public MCommandManagerConfig setUnknownOptionMessage(String unknownOptionMessage) {
+        this.unknownOptionMessage = unknownOptionMessage;
         return this;
     }
 }
