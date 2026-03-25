@@ -71,12 +71,23 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 	public MCmdNode buildCommandTree(@Nonnull MCommand instance){
 		Command command = instance.getClass().getAnnotation(Command.class);
 		MCmdNode root = new MCmdNode(command.value(), command.description());
+		boolean rootRegistered = false;
 
 		for (Method method : instance.getClass().getDeclaredMethods()) {
 			boolean isRoot = method.isAnnotationPresent(Root.class);
 			boolean isSub = method.isAnnotationPresent(Sub.class);
 			if (!isRoot && !isSub) continue;
 			method.setAccessible(true);
+
+			if (isRoot) {
+				if (rootRegistered) {
+					throw new IllegalArgumentException(
+							"Only one @Root method is allowed per command class, found multiple in "
+									+ instance.getClass().getSimpleName()
+					);
+				}
+				rootRegistered = true;
+			}
 
 			Sub sub = method.getAnnotation(Sub.class);
 			MCmdNode current = root;
