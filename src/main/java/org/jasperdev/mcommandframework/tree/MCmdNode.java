@@ -64,7 +64,7 @@ public final class MCmdNode {
 						"that already has subcommands.");
 			}
 
-			if(node.getType() == null && child.getName().equalsIgnoreCase(node.getName())){
+			if(child.getName().equalsIgnoreCase(node.getName())){
 				throw new IllegalArgumentException("Subcommand '" + node.getName() + "' already exists.");
 			}
 		}
