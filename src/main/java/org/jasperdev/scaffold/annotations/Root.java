@@ -1,4 +1,4 @@
-package org.jasperdev.mcommandframework.annotations;
+package org.jasperdev.scaffold.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,6 @@
-package org.jasperdev.mcommandframework.annotations;
+package org.jasperdev.scaffold.annotations;
+
+import org.jasperdev.scaffold.api.ScaffoldCommand;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +15,7 @@ import java.lang.annotation.Target;
  *
  * @see Command
  * @see Sub
- * @see org.jasperdev.mcommandframework.api.MCommand
+ * @see ScaffoldCommand
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})

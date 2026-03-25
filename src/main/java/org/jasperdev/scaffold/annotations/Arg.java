@@ -1,4 +1,6 @@
-package org.jasperdev.mcommandframework.annotations;
+package org.jasperdev.scaffold.annotations;
+
+import org.jasperdev.scaffold.api.ScaffoldCommand;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.ElementType;
@@ -10,12 +12,12 @@ import java.lang.annotation.Target;
  * Annotates a method parameter to be treated as a command argument.
  * <p>
  * The {@link #value()} of this annotation identifies the argument name.
- * If this name matches a key in {@link org.jasperdev.mcommandframework.api.MCommand#choices()},
+ * If this name matches a key in {@link ScaffoldCommand#choices()},
  * the corresponding provider will be used for tab-completion and validation.
  *
  * @see Sub
  * @see Command
- * @see org.jasperdev.mcommandframework.api.MCommand#choices()
+ * @see ScaffoldCommand#choices()
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)

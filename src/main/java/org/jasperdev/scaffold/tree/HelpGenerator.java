@@ -1,6 +1,6 @@
-package org.jasperdev.mcommandframework.tree;
+package org.jasperdev.scaffold.tree;
 
-import org.jasperdev.mcommandframework.models.OptionData;
+import org.jasperdev.scaffold.models.ArgumentData;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,7 +8,7 @@ import java.util.List;
 
 public final class HelpGenerator {
 
-	public static String[] generate(MCmdNode root){
+	public static String[] generate(CommandNode root){
 		List<String[]> entries = new ArrayList<>();
 		walkTree(root, root.getName(), root.getDescription(), entries);
 		entries.sort(Comparator.comparing(e -> e[0]));
@@ -22,23 +22,23 @@ public final class HelpGenerator {
 		return lines.toArray(new String[0]);
 	}
 
-	private static void walkTree(MCmdNode node, String path, String lastDescription, List<String[]> output){
+	private static void walkTree(CommandNode node, String path, String lastDescription, List<String[]> output){
 		String description = node.getType() == null ? node.getDescription() : lastDescription;
 		boolean hasOnlyOptionalChildren = !node.getChildren().isEmpty()
 				&& node.getChildren().stream().allMatch(c -> c.getOptionData() != null && c.getOptionData().isOptional());
 		if(node.getExecutor() != null && !hasOnlyOptionalChildren){
 			output.add(new String[]{path, description});
 		}
-		for(MCmdNode child : node.getChildren()){
+		for(CommandNode child : node.getChildren()){
 			walkTree(child, formatChildPath(child, path), description, output);
 		}
 	}
 
-	private static String formatChildPath(MCmdNode child, String path){
+	private static String formatChildPath(CommandNode child, String path){
 		if(child.getType() == null){
 			return path + " " + child.getName();
 		}
-		String argDisplay = child.getType() != OptionData.OptionType.CHOICE
+		String argDisplay = child.getType() != ArgumentData.ArgumentType.CHOICE
 				? child.getType().toString().toLowerCase()
 				: child.getName();
 		boolean optional = child.getOptionData() != null && child.getOptionData().isOptional();

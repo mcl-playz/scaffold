@@ -1,6 +1,6 @@
-package org.jasperdev.mcommandframework.models;
+package org.jasperdev.scaffold.models;
 
-public class MCommandManagerConfig {
+public class ScaffoldConfig {
 	private String errorMessage = "§c§lERROR §8|§r§7 %s";
 	private String noPermissionMessage = "You don't have permission to execute that command!";
 	private String unknownSubcommandMessage = "Unknown subcommand: %s";
@@ -22,7 +22,7 @@ public class MCommandManagerConfig {
 		return errorMessage;
 	}
 
-	public MCommandManagerConfig setErrorMessage(String errorMessage){
+	public ScaffoldConfig setErrorMessage(String errorMessage){
 		this.errorMessage = errorMessage;
 		return this;
 	}
@@ -31,7 +31,7 @@ public class MCommandManagerConfig {
 		return noPermissionMessage;
 	}
 
-	public MCommandManagerConfig setNoPermissionMessage(String noPermissionMessage){
+	public ScaffoldConfig setNoPermissionMessage(String noPermissionMessage){
 		this.noPermissionMessage = noPermissionMessage;
 		return this;
 	}
@@ -40,7 +40,7 @@ public class MCommandManagerConfig {
 		return unknownSubcommandMessage;
 	}
 
-	public MCommandManagerConfig setUnknownSubcommandMessage(String unknownSubcommandMessage){
+	public ScaffoldConfig setUnknownSubcommandMessage(String unknownSubcommandMessage){
 		this.unknownSubcommandMessage = unknownSubcommandMessage;
 		return this;
 	}
@@ -49,7 +49,7 @@ public class MCommandManagerConfig {
 		return incompleteCommandMessage;
 	}
 
-	public MCommandManagerConfig setIncompleteCommandMessage(String incompleteCommandMessage){
+	public ScaffoldConfig setIncompleteCommandMessage(String incompleteCommandMessage){
 		this.incompleteCommandMessage = incompleteCommandMessage;
 		return this;
 	}
@@ -58,7 +58,7 @@ public class MCommandManagerConfig {
 		return senderNotConsoleMessage;
 	}
 
-	public MCommandManagerConfig setSenderNotConsoleMessage(String senderNotConsoleMessage){
+	public ScaffoldConfig setSenderNotConsoleMessage(String senderNotConsoleMessage){
 		this.senderNotConsoleMessage = senderNotConsoleMessage;
 		return this;
 	}
@@ -67,7 +67,7 @@ public class MCommandManagerConfig {
 		return senderNotPlayerMessage;
 	}
 
-	public MCommandManagerConfig setSenderNotPlayerMessage(String senderNotPlayerMessage){
+	public ScaffoldConfig setSenderNotPlayerMessage(String senderNotPlayerMessage){
 		this.senderNotPlayerMessage = senderNotPlayerMessage;
 		return this;
 	}
@@ -76,7 +76,7 @@ public class MCommandManagerConfig {
 		return autoInjectHelp;
 	}
 
-	public MCommandManagerConfig setAutoInjectHelp(boolean autoInjectHelp){
+	public ScaffoldConfig setAutoInjectHelp(boolean autoInjectHelp){
 		this.autoInjectHelp = autoInjectHelp;
 		return this;
 	}
@@ -85,7 +85,7 @@ public class MCommandManagerConfig {
 		return unknownOptionMessage;
 	}
 
-	public MCommandManagerConfig setUnknownOptionMessage(String unknownOptionMessage){
+	public ScaffoldConfig setUnknownOptionMessage(String unknownOptionMessage){
 		this.unknownOptionMessage = unknownOptionMessage;
 		return this;
 	}
