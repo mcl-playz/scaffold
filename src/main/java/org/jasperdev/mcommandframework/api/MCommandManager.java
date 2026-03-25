@@ -73,25 +73,28 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		MCmdNode root = new MCmdNode(command.value(), command.description());
 
 		for (Method method : instance.getClass().getDeclaredMethods()) {
-			if (!method.isAnnotationPresent(Sub.class)) continue;
+			boolean isRoot = method.isAnnotationPresent(Root.class);
+			boolean isSub = method.isAnnotationPresent(Sub.class);
+			if (!isRoot && !isSub) continue;
 			method.setAccessible(true);
 
 			Sub sub = method.getAnnotation(Sub.class);
-			String[] parts = sub.value().split(" ");
-
-			// build path nodes
 			MCmdNode current = root;
-			for (int i = 0; i < parts.length; i++) {
-				String part = parts[i];
-				boolean isLast = i == parts.length - 1;
 
-				MCmdNode existing = current.getChild(part);
-				if (existing != null) {
-					current = existing;
-				} else {
-					MCmdNode newNode = new MCmdNode(part, isLast ? sub.description() : "");
-					current.addChild(newNode);
-					current = newNode;
+			if (sub != null) {
+				String[] parts = sub.value().split(" ");
+				for (int i = 0; i < parts.length; i++) {
+					String part = parts[i];
+					boolean isLast = i == parts.length - 1;
+
+					MCmdNode existing = current.getChild(part);
+					if (existing != null) {
+						current = existing;
+					} else {
+						MCmdNode newNode = new MCmdNode(part, isLast ? sub.description() : "");
+						current.addChild(newNode);
+						current = newNode;
+					}
 				}
 			}
 
