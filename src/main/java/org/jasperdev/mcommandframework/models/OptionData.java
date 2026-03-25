@@ -18,6 +18,7 @@ public class OptionData {
 		DOUBLE,
         FLOAT,
         STRING,
+        BOOLEAN,
         PLAYER,
         CHOICE
     }
@@ -83,6 +84,7 @@ public class OptionData {
         if (paramType == int.class || paramType == Integer.class) return OptionType.INTEGER;
         if (paramType == double.class || paramType == Double.class) return OptionType.DOUBLE;
         if (paramType == float.class || paramType == Float.class) return OptionType.FLOAT;
+        if (paramType == boolean.class || paramType == Boolean.class) return OptionType.BOOLEAN;
         if (paramType == Player.class) return OptionType.PLAYER;
         return OptionType.STRING; // default
     }
