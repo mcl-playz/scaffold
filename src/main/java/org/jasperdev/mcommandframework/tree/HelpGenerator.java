@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class HelpGenerator {
+public final class HelpGenerator {
 
 	public static String[] generate(MCmdNode root) {
 		List<String[]> entries = new ArrayList<>();

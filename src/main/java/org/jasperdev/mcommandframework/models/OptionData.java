@@ -6,13 +6,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class OptionData {
-    protected String name;
-    protected String description;
-    protected OptionType type;
-    protected boolean optional;
-    protected List<String> choices;
-    protected ChoicesProvider dynamicChoices;
+public final class OptionData {
+    private String name;
+    private String description;
+    private OptionType type;
+    private boolean optional;
+    private List<String> choices;
+    private ChoicesProvider dynamicChoices;
 
     public enum OptionType {
         INTEGER,

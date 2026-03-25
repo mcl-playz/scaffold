@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import static org.jasperdev.mcommandframework.models.OptionData.inferType;
 
-public class MCommandManager implements CommandExecutor, TabCompleter {
+public final class MCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
 	private final Map<String, MCmdNode> commands = new HashMap<>();
 	private MCommandManagerConfig config = new MCommandManagerConfig();

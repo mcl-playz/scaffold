@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MCmdNode {
+public final class MCmdNode {
 	private final String name;
 	private final String description;
 	private final OptionData.OptionType type;
