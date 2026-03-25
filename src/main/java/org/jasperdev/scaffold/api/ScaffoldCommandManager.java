@@ -29,11 +29,12 @@ import static org.jasperdev.scaffold.models.ArgumentData.inferType;
 
 public final class ScaffoldCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
+	private ScaffoldConfig config;
 	private final Map<String, CommandNode> commands = new HashMap<>();
-	private ScaffoldConfig config = new ScaffoldConfig();
 
 	public ScaffoldCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
+		this.config = new ScaffoldConfig(plugin);
 	}
 
 	public ScaffoldCommandManager setConfig(ScaffoldConfig config){
@@ -65,6 +66,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 			commands.put(root.getName(), root);
 		} catch (Exception e) {
 			plugin.getLogger().severe("Failed to register command '" + commandName + "': " + e.getMessage());
+			config.getExceptionHandler().handle(null, e);
 		}
 	}
 
@@ -176,7 +178,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 				try {
 					method.invoke(instance, buildArgs(method, ctx));
 				} catch (Exception e) {
-					e.printStackTrace();
+					config.getExceptionHandler().handle(ctx.sender(), e);
 				}
 			};
 
