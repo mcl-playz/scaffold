@@ -68,7 +68,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		}
 	}
 
-	public MCmdNode buildCommandTree(@Nonnull MCommand instance){
+	private MCmdNode buildCommandTree(@Nonnull MCommand instance){
 		Command command = instance.getClass().getAnnotation(Command.class);
 		MCmdNode root = new MCmdNode(command.value(), command.description());
 		boolean rootRegistered = false;
