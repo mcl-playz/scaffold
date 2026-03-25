@@ -10,7 +10,7 @@ import java.util.Map;
  * @see org.jasperdev.scaffold.annotations.Command
  * @see org.jasperdev.scaffold.annotations.Sub
  */
-public interface ScaffoldCommand {
+public interface CommandBase {
 	/**
 	 * Provides a mapping of selection keys to their corresponding {@link ChoicesProvider}.
 	 * <p>

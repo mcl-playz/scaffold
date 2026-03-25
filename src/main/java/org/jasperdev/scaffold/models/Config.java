@@ -1,9 +1,9 @@
 package org.jasperdev.scaffold.models;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jasperdev.scaffold.api.ScaffoldExceptionHandler;
+import org.jasperdev.scaffold.api.ExceptionHandler;
 
-public class ScaffoldConfig {
+public class Config {
 	private JavaPlugin plugin;
 
 	private String errorMessage = "§c§lERROR §8|§r§7 %s";
@@ -16,12 +16,12 @@ public class ScaffoldConfig {
 
 	private boolean autoInjectHelp = true;
 
-	private ScaffoldExceptionHandler exceptionHandler = ((sender, e) -> {
+	private ExceptionHandler exceptionHandler = ((sender, e) -> {
 		if(sender != null) sender.sendMessage("An internal error occurred.");
 		plugin.getLogger().severe(e.getMessage());
 	});
 
-	public ScaffoldConfig(JavaPlugin plugin){
+	public Config(JavaPlugin plugin){
 		this.plugin = plugin;
 	}
 
@@ -37,7 +37,7 @@ public class ScaffoldConfig {
 		return errorMessage;
 	}
 
-	public ScaffoldConfig setErrorMessage(String errorMessage){
+	public Config setErrorMessage(String errorMessage){
 		this.errorMessage = errorMessage;
 		return this;
 	}
@@ -46,7 +46,7 @@ public class ScaffoldConfig {
 		return noPermissionMessage;
 	}
 
-	public ScaffoldConfig setNoPermissionMessage(String noPermissionMessage){
+	public Config setNoPermissionMessage(String noPermissionMessage){
 		this.noPermissionMessage = noPermissionMessage;
 		return this;
 	}
@@ -55,7 +55,7 @@ public class ScaffoldConfig {
 		return unknownSubcommandMessage;
 	}
 
-	public ScaffoldConfig setUnknownSubcommandMessage(String unknownSubcommandMessage){
+	public Config setUnknownSubcommandMessage(String unknownSubcommandMessage){
 		this.unknownSubcommandMessage = unknownSubcommandMessage;
 		return this;
 	}
@@ -64,7 +64,7 @@ public class ScaffoldConfig {
 		return incompleteCommandMessage;
 	}
 
-	public ScaffoldConfig setIncompleteCommandMessage(String incompleteCommandMessage){
+	public Config setIncompleteCommandMessage(String incompleteCommandMessage){
 		this.incompleteCommandMessage = incompleteCommandMessage;
 		return this;
 	}
@@ -73,7 +73,7 @@ public class ScaffoldConfig {
 		return senderNotConsoleMessage;
 	}
 
-	public ScaffoldConfig setSenderNotConsoleMessage(String senderNotConsoleMessage){
+	public Config setSenderNotConsoleMessage(String senderNotConsoleMessage){
 		this.senderNotConsoleMessage = senderNotConsoleMessage;
 		return this;
 	}
@@ -82,7 +82,7 @@ public class ScaffoldConfig {
 		return senderNotPlayerMessage;
 	}
 
-	public ScaffoldConfig setSenderNotPlayerMessage(String senderNotPlayerMessage){
+	public Config setSenderNotPlayerMessage(String senderNotPlayerMessage){
 		this.senderNotPlayerMessage = senderNotPlayerMessage;
 		return this;
 	}
@@ -91,7 +91,7 @@ public class ScaffoldConfig {
 		return autoInjectHelp;
 	}
 
-	public ScaffoldConfig setAutoInjectHelp(boolean autoInjectHelp){
+	public Config setAutoInjectHelp(boolean autoInjectHelp){
 		this.autoInjectHelp = autoInjectHelp;
 		return this;
 	}
@@ -100,16 +100,16 @@ public class ScaffoldConfig {
 		return unknownOptionMessage;
 	}
 
-	public ScaffoldConfig setUnknownOptionMessage(String unknownOptionMessage){
+	public Config setUnknownOptionMessage(String unknownOptionMessage){
 		this.unknownOptionMessage = unknownOptionMessage;
 		return this;
 	}
 
-	public ScaffoldExceptionHandler getExceptionHandler(){
+	public ExceptionHandler getExceptionHandler(){
 		return exceptionHandler;
 	}
 
-	public void setExceptionHandler(ScaffoldExceptionHandler exceptionHandler){
+	public void setExceptionHandler(ExceptionHandler exceptionHandler){
 		this.exceptionHandler = exceptionHandler;
 	}
 }
