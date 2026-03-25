@@ -13,7 +13,7 @@ public final class CommandNode {
 	private final String description;
 	private final ArgumentData.ArgumentType type;
 	private ArgumentData argumentData;
-	private ScaffoldCommandExecutor executor;
+	private CommandExecutor executor;
 
 	private final List<CommandNode> children = new ArrayList<>();
 
@@ -83,13 +83,13 @@ public final class CommandNode {
 		return children;
 	}
 
-	public CommandNode setExecutor(@Nonnull ScaffoldCommandExecutor executor){
+	public CommandNode setExecutor(@Nonnull CommandExecutor executor){
 		this.executor = executor;
 		return this;
 	}
 
 	@Nullable
-	public ScaffoldCommandExecutor getExecutor(){
+	public CommandExecutor getExecutor(){
 		return executor;
 	}
 
@@ -104,7 +104,7 @@ public final class CommandNode {
 	}
 
 	@FunctionalInterface
-	public interface ScaffoldCommandExecutor {
+	public interface CommandExecutor {
 		void execute(CommandContext context);
 	}
 }

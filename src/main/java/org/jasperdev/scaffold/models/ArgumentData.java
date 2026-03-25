@@ -2,7 +2,7 @@ package org.jasperdev.scaffold.models;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.jasperdev.scaffold.api.ScaffoldCommand;
+import org.jasperdev.scaffold.api.CommandBase;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -106,7 +106,7 @@ public final class ArgumentData {
 	/**
 	 * A functional interface that supplies a list of valid choices for a command argument.
 	 * <p>
-	 * Register providers by returning them from {@link ScaffoldCommand#choices()},
+	 * Register providers by returning them from {@link CommandBase#choices()},
 	 * keyed by the corresponding {@link org.jasperdev.scaffold.annotations.Arg#value()}.
 	 * The returned values are used for both tab-completion and input validation.
 	 *
@@ -117,7 +117,7 @@ public final class ArgumentData {
 	 * }
 	 * }</pre>
 	 *
-	 * @see ScaffoldCommand#choices()
+	 * @see CommandBase#choices()
 	 * @see org.jasperdev.scaffold.annotations.Arg
 	 */
 	@FunctionalInterface

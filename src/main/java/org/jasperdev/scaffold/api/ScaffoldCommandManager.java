@@ -12,7 +12,7 @@ import org.jasperdev.scaffold.annotations.ExecutableBy.SenderType;
 import org.jasperdev.scaffold.models.ArgumentData;
 import org.jasperdev.scaffold.models.ArgumentData.ChoicesProvider;
 import org.jasperdev.scaffold.models.CommandContext;
-import org.jasperdev.scaffold.models.ScaffoldConfig;
+import org.jasperdev.scaffold.models.Config;
 import org.jasperdev.scaffold.tree.CommandNode;
 import org.jasperdev.scaffold.tree.HelpGenerator;
 
@@ -29,20 +29,20 @@ import static org.jasperdev.scaffold.models.ArgumentData.inferType;
 
 public final class ScaffoldCommandManager implements CommandExecutor, TabCompleter {
 	private final JavaPlugin plugin;
-	private ScaffoldConfig config;
+	private Config config;
 	private final Map<String, CommandNode> commands = new HashMap<>();
 
 	public ScaffoldCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
-		this.config = new ScaffoldConfig(plugin);
+		this.config = new Config(plugin);
 	}
 
-	public ScaffoldCommandManager setConfig(ScaffoldConfig config){
+	public ScaffoldCommandManager setConfig(Config config){
 		this.config = config;
 		return this;
 	}
 
-	public void registerCommand(@Nonnull ScaffoldCommand command){
+	public void registerCommand(@Nonnull CommandBase command){
 		String commandName = command.getClass().getSimpleName();
 		try {
 			if(!Modifier.isPublic(command.getClass().getModifiers())){
@@ -70,7 +70,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 		}
 	}
 
-	private CommandNode buildCommandTree(@Nonnull ScaffoldCommand instance){
+	private CommandNode buildCommandTree(@Nonnull CommandBase instance){
 		Command command = instance.getClass().getAnnotation(Command.class);
 		CommandNode root = new CommandNode(command.value(), command.description());
 		boolean rootRegistered = false;
@@ -162,7 +162,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 					SenderType.ALL
 			);
 
-			CommandNode.ScaffoldCommandExecutor exec = ctx -> {
+			CommandNode.CommandExecutor exec = ctx -> {
 				if(senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)){
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
 					return;
