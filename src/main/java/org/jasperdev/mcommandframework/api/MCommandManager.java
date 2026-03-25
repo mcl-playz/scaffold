@@ -40,21 +40,34 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 		return this;
 	}
 
-	private Object[] buildArgs(Method method, MCommandContext ctx) {
-		List<Object> args = new ArrayList<>();
-		for (Parameter param : method.getParameters()) {
-			if (param.getType() == MCommandContext.class) {
-				args.add(ctx);
-			} else if (param.isAnnotationPresent(Arg.class)) {
-				Arg arg = param.getAnnotation(Arg.class);
-				Object val = ctx.args().get(arg.value().toLowerCase());
-				if (val == null && !arg.optional()) {
-					throw new NoSuchElementException("Argument '" + arg.value() + "' missing");
-				}
-				args.add(val);
+	public void registerCommand(@Nonnull MCommand command){
+		String commandName = command.getClass().getSimpleName();
+		try {
+			if (!Modifier.isPublic(command.getClass().getModifiers())) {
+				throw new IllegalArgumentException(
+						commandName + " must be public to be registered as a command."
+				);
 			}
+
+			MCmdNode root = buildCommandTree(command);
+			commandName = root.getName();
+			Permission classPermission = command.getClass().getAnnotation(Permission.class);
+
+			if(config.canAutoInjectHelp()){
+				MCmdNode helpNode = new MCmdNode("help", "Usage for command").setExecutor((ctx) -> {
+					List<String> lines = new ArrayList<>();
+					lines.add("§6--- Help ---");
+					walkTree(root, "/" + root.getName(), lines);
+					ctx.sender().sendMessage(lines.toArray(new String[0]));
+				});
+				root.addChild(helpNode);
+			}
+
+			registerBukkitCommand(root, classPermission);
+			commands.put(root.getName(), root);
+		} catch (Exception e) {
+			plugin.getLogger().severe("Failed to register command '" + commandName + "': " + e.getMessage());
 		}
-		return args.toArray();
 	}
 
 	public MCmdNode buildCommandTree(@Nonnull MCommand instance){
@@ -163,41 +176,6 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 		return root;
 	}
 
-	public void registerCommand(@Nonnull MCommand command){
-		String commandName = command.getClass().getSimpleName();
-		try {
-			if (!Modifier.isPublic(command.getClass().getModifiers())) {
-				throw new IllegalArgumentException(
-						commandName + " must be public to be registered as a command."
-				);
-			}
-
-			MCmdNode root = buildCommandTree(command);
-			commandName = root.getName();
-			Permission classPermission = command.getClass().getAnnotation(Permission.class);
-
-			Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
-			constructor.setAccessible(true);
-
-			PluginCommand pluginCommand = constructor.newInstance(root.getName(), plugin);
-			pluginCommand.setExecutor(this);
-			pluginCommand.setTabCompleter(this);
-
-			if (classPermission != null) {
-				pluginCommand.setPermission(classPermission.value());
-			}
-
-			Field commandMapField = SimplePluginManager.class.getDeclaredField("commandMap");
-			commandMapField.setAccessible(true);
-			CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getPluginManager());
-
-			commandMap.register(plugin.getName(), pluginCommand);
-			commands.put(root.getName(), root);
-		} catch (Exception e) {
-			plugin.getLogger().severe("Failed to register command '" + commandName + "': " + e.getMessage());
-		}
-	}
-
 	@Override
 	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull org.bukkit.command.Command command, @Nonnull String label, @Nonnull String[] args){
 		MCmdNode currentNode = commands.get(command.getName().toLowerCase());
@@ -267,6 +245,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 									? data.getChoices().stream()
 									: Stream.empty();
 						}
+						case BOOLEAN -> Stream.of("true", "false");
 						case PLAYER -> Bukkit.getOnlinePlayers().stream()
 								.map(Player::getName);
 						default -> Stream.empty();
@@ -274,6 +253,56 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				})
 				.filter(name -> name.toLowerCase().startsWith(lastArg))
 				.collect(Collectors.toList());
+	}
+
+	private void registerBukkitCommand(MCmdNode root, Permission permission) throws Exception{
+
+
+		Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+		constructor.setAccessible(true);
+
+		PluginCommand pluginCommand = constructor.newInstance(root.getName(), plugin);
+		pluginCommand.setExecutor(this);
+		pluginCommand.setTabCompleter(this);
+
+		if (permission != null) {
+			pluginCommand.setPermission(permission.value());
+		}
+
+		Field commandMapField = SimplePluginManager.class.getDeclaredField("commandMap");
+		commandMapField.setAccessible(true);
+		CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getPluginManager());
+
+		commandMap.register(plugin.getName(), pluginCommand);
+	}
+
+	private void walkTree(MCmdNode node, String path, List<String> output) {
+		if (node.getExecutor() != null) {
+			output.add(path + " - " + node.getDescription());
+		}
+		for (MCmdNode child : node.getChildren()) {
+			String childPath = child.getType() != null
+					? path + " <" + child.getType().toString().toLowerCase() + ">"
+					: path + " " + child.getName();
+			walkTree(child, childPath, output);
+		}
+	}
+
+	private Object[] buildArgs(Method method, MCommandContext ctx) {
+		List<Object> args = new ArrayList<>();
+		for (Parameter param : method.getParameters()) {
+			if (param.getType() == MCommandContext.class) {
+				args.add(ctx);
+			} else if (param.isAnnotationPresent(Arg.class)) {
+				Arg arg = param.getAnnotation(Arg.class);
+				Object val = ctx.args().get(arg.value().toLowerCase());
+				if (val == null && !arg.optional()) {
+					throw new NoSuchElementException("Argument '" + arg.value() + "' missing");
+				}
+				args.add(val);
+			}
+		}
+		return args.toArray();
 	}
 
 	private MCmdNode findMatchingChild(MCmdNode parent, String input){
@@ -288,17 +317,6 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 			}
 		}
 		return null;
-	}
-
-	@Nullable
-	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor) {
-		return resolveAnnotation(method, clazz, extractor, null);
-	}
-
-	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor, V defaultValue) {
-		if (method != null) return extractor.apply(method);
-		if (clazz != null) return extractor.apply(clazz);
-		return defaultValue;
 	}
 
 	private Object parseArgument(MCmdNode node, String input) throws IllegalArgumentException{
@@ -317,6 +335,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				case INTEGER -> Integer.parseInt(input);
 				case DOUBLE -> Double.parseDouble(input);
 				case FLOAT -> Float.parseFloat(input);
+				case BOOLEAN -> Boolean.parseBoolean(input);
 				case PLAYER -> {
 					Player player = Bukkit.getPlayerExact(input);
 					if(player == null) throw new IllegalArgumentException("Player '" + input + "' not found.");
@@ -327,5 +346,16 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 		} catch (NumberFormatException e){
 			throw new IllegalArgumentException("'" + input + "' is not a valid " + type.name().toLowerCase());
 		}
+	}
+
+	@Nullable
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor) {
+		return resolveAnnotation(method, clazz, extractor, null);
+	}
+
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor, V defaultValue) {
+		if (method != null) return extractor.apply(method);
+		if (clazz != null) return extractor.apply(clazz);
+		return defaultValue;
 	}
 }
