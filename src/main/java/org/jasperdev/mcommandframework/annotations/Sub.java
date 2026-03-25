@@ -15,6 +15,8 @@ import java.lang.annotation.Target;
  *
  * @see Command
  * @see Arg
+ * @see Permission
+ * @see ExecutableBy
  * @see org.jasperdev.mcommandframework.api.MCommand
  */
 @Retention(RetentionPolicy.RUNTIME)
