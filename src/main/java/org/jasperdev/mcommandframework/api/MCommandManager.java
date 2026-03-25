@@ -1,7 +1,6 @@
 package org.jasperdev.mcommandframework.api;
 
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -45,7 +44,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 	public void registerCommand(@Nonnull MCommand command){
 		String commandName = command.getClass().getSimpleName();
 		try {
-			if (!Modifier.isPublic(command.getClass().getModifiers())) {
+			if(!Modifier.isPublic(command.getClass().getModifiers())){
 				throw new IllegalArgumentException(
 						commandName + " must be public to be registered as a command."
 				);
@@ -74,14 +73,14 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		MCmdNode root = new MCmdNode(command.value(), command.description());
 		boolean rootRegistered = false;
 
-		for (Method method : instance.getClass().getDeclaredMethods()) {
+		for(Method method : instance.getClass().getDeclaredMethods()){
 			boolean isRoot = method.isAnnotationPresent(Root.class);
 			boolean isSub = method.isAnnotationPresent(Sub.class);
-			if (!isRoot && !isSub) continue;
+			if(!isRoot && !isSub) continue;
 			method.setAccessible(true);
 
-			if (isRoot) {
-				if (rootRegistered) {
+			if(isRoot){
+				if(rootRegistered){
 					throw new IllegalArgumentException(
 							"Only one @Root method is allowed per command class, found multiple in "
 									+ instance.getClass().getSimpleName()
@@ -93,14 +92,14 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			Sub sub = method.getAnnotation(Sub.class);
 			MCmdNode current = root;
 
-			if (sub != null) {
+			if(sub != null){
 				String[] parts = sub.value().split(" ");
-				for (int i = 0; i < parts.length; i++) {
+				for(int i = 0; i < parts.length; i++){
 					String part = parts[i];
 					boolean isLast = i == parts.length - 1;
 
 					MCmdNode existing = current.getChild(part);
-					if (existing != null) {
+					if(existing != null){
 						current = existing;
 					} else {
 						MCmdNode newNode = new MCmdNode(part, isLast ? sub.description() : "");
@@ -114,16 +113,16 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			Map<String, ChoicesProvider> choices = instance.choices();
 			MCmdNode firstOptionalParent = null;
 			boolean seenOptional = false;
-			for (Parameter param : method.getParameters()) {
-				if (!param.isAnnotationPresent(Arg.class)) continue;
+			for(Parameter param : method.getParameters()){
+				if(!param.isAnnotationPresent(Arg.class)) continue;
 
 				Arg arg = param.getAnnotation(Arg.class);
-				if (seenOptional && !arg.optional()) {
+				if(seenOptional && !arg.optional()){
 					throw new IllegalArgumentException(
 							"Required argument '" + arg.value() + "' cannot follow optional arguments in @Sub(\"" + sub.value() + "\")"
 					);
 				}
-				if (arg.optional() && !param.isAnnotationPresent(Nullable.class)) {
+				if(arg.optional() && !param.isAnnotationPresent(Nullable.class)){
 					throw new IllegalArgumentException(
 							"Optional argument '" + arg.value() + "' must be annotated @Nullable in @Sub(\"" + sub.value() + "\")"
 					);
@@ -132,7 +131,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 				OptionData option;
 
-				if (choices.containsKey(arg.value())) {
+				if(choices.containsKey(arg.value())){
 					ChoicesProvider provider = choices.get(arg.value());
 					option = new OptionData(arg.value(), arg.value(), provider);
 				} else {
@@ -140,7 +139,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 				}
 				option.setOptional(arg.optional());
 
-				if (arg.optional() && firstOptionalParent == null) {
+				if(arg.optional() && firstOptionalParent == null){
 					firstOptionalParent = current;
 				}
 
@@ -162,15 +161,15 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			);
 
 			MCmdNode.MCmdExecutor exec = ctx -> {
-				if (senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)) {
+				if(senderType == SenderType.PLAYER && !(ctx.sender() instanceof Player)){
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotPlayerMessage()));
 					return;
 				}
-				if (senderType == SenderType.CONSOLE && ctx.sender() instanceof Player) {
+				if(senderType == SenderType.CONSOLE && ctx.sender() instanceof Player){
 					ctx.sender().sendMessage(config.formatError(config.getSenderNotConsoleMessage()));
 					return;
 				}
-				if (permission != null && !ctx.sender().hasPermission(permission)) {
+				if(permission != null && !ctx.sender().hasPermission(permission)){
 					ctx.sender().sendMessage(config.formatError(config.getNoPermissionMessage()));
 					return;
 				}
@@ -182,7 +181,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 			};
 
 			current.setExecutor(exec);
-			if (firstOptionalParent != null) {
+			if(firstOptionalParent != null){
 				firstOptionalParent.setExecutor(exec);
 			}
 		}
@@ -197,7 +196,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 		Map<String, Object> collectedArgs = new HashMap<>();
 
-		try{
+		try {
 			for(String currentInput : args){
 				MCmdNode nextNode = findMatchingChild(currentNode, currentInput);
 
@@ -222,7 +221,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 				sender.sendMessage(config.formatError(config.getIncompleteCommandMessage()));
 			}
 
-		} catch (IllegalArgumentException e){
+		} catch (IllegalArgumentException e) {
 			sender.sendMessage(config.formatError(e.getMessage()));
 		}
 
@@ -252,7 +251,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					}
 
 					// Handle specific argument types
-					return switch(type) {
+					return switch(type){
 						case CHOICE -> {
 							OptionData data = child.getOptionData();
 							yield (data != null && data.getChoices() != null)
@@ -277,7 +276,7 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		pluginCommand.setExecutor(this);
 		pluginCommand.setTabCompleter(this);
 
-		if (permission != null) {
+		if(permission != null){
 			pluginCommand.setPermission(permission.value());
 		}
 
@@ -288,15 +287,15 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		commandMap.register(plugin.getName(), pluginCommand);
 	}
 
-	private Object[] buildArgs(Method method, MCommandContext ctx) {
+	private Object[] buildArgs(Method method, MCommandContext ctx){
 		List<Object> args = new ArrayList<>();
-		for (Parameter param : method.getParameters()) {
-			if (param.getType() == MCommandContext.class) {
+		for(Parameter param : method.getParameters()){
+			if(param.getType() == MCommandContext.class){
 				args.add(ctx);
-			} else if (param.isAnnotationPresent(Arg.class)) {
+			} else if(param.isAnnotationPresent(Arg.class)){
 				Arg arg = param.getAnnotation(Arg.class);
 				Object val = ctx.args().get(arg.value().toLowerCase());
-				if (val == null && !arg.optional()) {
+				if(val == null && !arg.optional()){
 					throw new NoSuchElementException("Argument '" + arg.value() + "' missing");
 				}
 				args.add(val);
@@ -323,8 +322,8 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 		OptionData.OptionType type = node.getType();
 		if(type == null) return input;
 
-		try{
-			return switch(type) {
+		try {
+			return switch(type){
 				case CHOICE -> {
 					List<String> allowed = (node.getOptionData() != null) ? node.getOptionData().getChoices() : null;
 					if(allowed == null || allowed.stream().noneMatch(s -> s.equalsIgnoreCase(input))){
@@ -342,24 +341,24 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					yield player;
 				}
 				case OFFLINE_PLAYER -> Arrays.stream(Bukkit.getOfflinePlayers())
-                        .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(input))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Player '" + input + "' not found."));
+						.filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(input))
+						.findFirst()
+						.orElseThrow(() -> new IllegalArgumentException("Player '" + input + "' not found."));
 				case STRING -> input;
 			};
-		} catch (NumberFormatException e){
+		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("'" + input + "' is not a valid " + type.name().toLowerCase());
 		}
 	}
 
 	@Nullable
-	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor) {
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor){
 		return resolveAnnotation(method, clazz, extractor, null);
 	}
 
-	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor, V defaultValue) {
-		if (method != null) return extractor.apply(method);
-		if (clazz != null) return extractor.apply(clazz);
+	private <A extends Annotation, V> V resolveAnnotation(A method, A clazz, Function<A, V> extractor, V defaultValue){
+		if(method != null) return extractor.apply(method);
+		if(clazz != null) return extractor.apply(clazz);
 		return defaultValue;
 	}
 }

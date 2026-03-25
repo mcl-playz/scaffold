@@ -19,7 +19,7 @@ public record MCommandContext(
 	 * @return The first Player argument if present, otherwise the sender cast to Player.
 	 */
 	@Nonnull
-	public Player getTarget() {
+	public Player getTarget(){
 		return args.values().stream()
 				.filter(Player.class::isInstance)
 				.map(Player.class::cast)

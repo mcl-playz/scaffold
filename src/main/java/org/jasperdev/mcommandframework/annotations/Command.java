@@ -27,6 +27,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Command {
-    @Nonnull String value();
-    @Nonnull String description() default "";
+	@Nonnull String value();
+	@Nonnull String description() default "";
 }
