@@ -14,9 +14,10 @@ public record MCommandContext(
 		@Nonnull Map<String, Object> args
 ) {
 	/**
-	 * Gets the first {@link Player} argument, or falls back to the command sender.
+	 * Gets the first {@link Player} argument, or falls back to the command sender if they are a player.
 	 *
 	 * @return The first Player argument if present, otherwise the sender cast to Player.
+	 * @throws IllegalStateException if no Player argument is found and the sender is not a Player.
 	 */
 	@Nonnull
 	public Player getTarget(){
@@ -24,6 +25,11 @@ public record MCommandContext(
 				.filter(Player.class::isInstance)
 				.map(Player.class::cast)
 				.findFirst()
-				.orElseGet(() -> (Player) sender());
+				.orElseGet(() -> {
+					if(!(sender() instanceof Player player)){
+						throw new IllegalStateException("No player argument found and sender is not a player.");
+					}
+					return player;
+				});
 	}
 }
