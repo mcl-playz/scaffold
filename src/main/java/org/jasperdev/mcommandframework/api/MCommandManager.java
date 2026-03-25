@@ -195,7 +195,7 @@ public class MCommandManager implements CommandExecutor, TabCompleter {
 				MCmdNode nextNode = findMatchingChild(currentNode, currentInput);
 
 				if(nextNode == null){
-					sender.sendMessage(config.formatError(config.parse(config.getUnknownArgumentMessage(), currentInput)));
+					sender.sendMessage(config.formatError(config.parse(config.getUnknownSubcommandMessage(), currentInput)));
 					return true;
 				}
 

@@ -3,7 +3,7 @@ package org.jasperdev.mcommandframework.models;
 public class MCommandManagerConfig {
     private String errorMessage = "§c§lERROR §8|§r§7 %s";
     private String noPermissionMessage = "You don't have permission to execute that command!";
-    private String unknownArgumentMessage = "Unknown argument: %s";
+    private String unknownSubcommandMessage = "Unknown subcommand: %s";
     private String incompleteCommandMessage = "Incomplete command usage";
     private String senderNotConsoleMessage = "This command can only be run from the console!";
     private String senderNotPlayerMessage = "This command can only be run by a player!";
@@ -35,12 +35,12 @@ public class MCommandManagerConfig {
         return this;
     }
 
-    public String getUnknownArgumentMessage() {
-        return unknownArgumentMessage;
+    public String getUnknownSubcommandMessage() {
+        return unknownSubcommandMessage;
     }
 
-    public MCommandManagerConfig setUnknownArgumentMessage(String unknownArgumentMessage) {
-        this.unknownArgumentMessage = unknownArgumentMessage;
+    public MCommandManagerConfig setUnknownSubcommandMessage(String unknownSubcommandMessage) {
+        this.unknownSubcommandMessage = unknownSubcommandMessage;
         return this;
     }
 
