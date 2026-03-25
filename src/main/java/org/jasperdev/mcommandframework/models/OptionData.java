@@ -1,5 +1,6 @@
 package org.jasperdev.mcommandframework.models;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nonnull;
@@ -21,6 +22,7 @@ public final class OptionData {
         STRING,
         BOOLEAN,
         PLAYER,
+        OFFLINE_PLAYER,
         CHOICE
     }
 
@@ -96,6 +98,7 @@ public final class OptionData {
         if (paramType == float.class || paramType == Float.class) return OptionType.FLOAT;
         if (paramType == boolean.class || paramType == Boolean.class) return OptionType.BOOLEAN;
         if (paramType == Player.class) return OptionType.PLAYER;
+        if (paramType == OfflinePlayer.class) return OptionType.OFFLINE_PLAYER;
         return OptionType.STRING; // default
     }
 

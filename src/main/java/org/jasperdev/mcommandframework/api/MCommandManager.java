@@ -1,6 +1,7 @@
 package org.jasperdev.mcommandframework.api;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -269,8 +270,6 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 	}
 
 	private void registerBukkitCommand(MCmdNode root, Permission permission) throws Exception{
-
-
 		Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
 		constructor.setAccessible(true);
 
@@ -288,8 +287,6 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 
 		commandMap.register(plugin.getName(), pluginCommand);
 	}
-
-
 
 	private Object[] buildArgs(Method method, MCommandContext ctx) {
 		List<Object> args = new ArrayList<>();
@@ -344,6 +341,10 @@ public final class MCommandManager implements CommandExecutor, TabCompleter {
 					if(player == null) throw new IllegalArgumentException("Player '" + input + "' not found.");
 					yield player;
 				}
+				case OFFLINE_PLAYER -> Arrays.stream(Bukkit.getOfflinePlayers())
+                        .filter(p -> p.getName() != null && p.getName().equalsIgnoreCase(input))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Player '" + input + "' not found."));
 				case STRING -> input;
 			};
 		} catch (NumberFormatException e){
