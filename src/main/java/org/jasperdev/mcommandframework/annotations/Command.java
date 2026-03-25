@@ -14,9 +14,14 @@ import java.lang.annotation.Target;
  * can be annotated with {@link Sub} to define subcommands. Command arguments are
  * declared using {@link Arg} on method parameters, with optional tab-completion
  * provided via {@link org.jasperdev.mcommandframework.api.MCommand#choices()}.
+ * <p>
+ * The root executor can be defined with a function annotated by {@link Root}
  *
+ * @see Root
  * @see Sub
  * @see Arg
+ * @see Permission
+ * @see ExecutableBy
  * @see org.jasperdev.mcommandframework.api.MCommand
  */
 @Retention(RetentionPolicy.RUNTIME)
