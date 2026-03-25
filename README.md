@@ -28,9 +28,7 @@ Register a command in your plugin's `onEnable`:
 
 ```java
 ScaffoldCommandManager manager = new ScaffoldCommandManager(this);
-manager.
-
-registerCommand(new MyCommand());
+manager.registerCommand(new MyCommand());
 ```
 
 For full usage, annotation reference, and configuration options, see
