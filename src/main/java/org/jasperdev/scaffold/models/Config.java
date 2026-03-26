@@ -13,6 +13,7 @@ public class Config {
 	private String senderNotConsoleMessage = "This command can only be run from the console!";
 	private String senderNotPlayerMessage = "This command can only be run by a player!";
 	private String unknownOptionMessage = "Unknown option. Please choose from the following: %s";
+	private String cooldownMessage = "You must wait %s seconds before using this again.";
 
 	private boolean autoInjectHelp = true;
 
@@ -111,5 +112,13 @@ public class Config {
 
 	public void setExceptionHandler(ExceptionHandler exceptionHandler){
 		this.exceptionHandler = exceptionHandler;
+	}
+
+	public String getCooldownMessage(){
+		return cooldownMessage;
+	}
+
+	public void setCooldownMessage(String cooldownMessage){
+		this.cooldownMessage = cooldownMessage;
 	}
 }

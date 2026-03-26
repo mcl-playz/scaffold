@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
           'annotations/arg',
           'annotations/permission',
           'annotations/executable-by',
+          'annotations/cooldown',
         ],
       },
       {

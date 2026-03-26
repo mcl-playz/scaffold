@@ -31,6 +31,7 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 	private final JavaPlugin plugin;
 	private Config config;
 	private final Map<String, CommandNode> commands = new HashMap<>();
+	private final Map<UUID, Map<String, Long>> cooldowns = new HashMap<>();
 
 	public ScaffoldCommandManager(@Nonnull JavaPlugin plugin){
 		this.plugin = plugin;
@@ -174,6 +175,27 @@ public final class ScaffoldCommandManager implements CommandExecutor, TabComplet
 				if(permission != null && !ctx.sender().hasPermission(permission)){
 					ctx.sender().sendMessage(config.formatError(config.getNoPermissionMessage()));
 					return;
+				}
+				if(method.isAnnotationPresent(Cooldown.class) && ctx.sender() instanceof Player player){
+					Cooldown cooldown = method.getAnnotation(Cooldown.class);
+					long cooldownMillis = cooldown.unit().toMillis(cooldown.value());
+					String key = sub != null ? sub.value() : "root";
+
+					long lastUsed = cooldowns
+							.getOrDefault(player.getUniqueId(), Collections.emptyMap())
+							.getOrDefault(key, 0L);
+
+					long remaining = (lastUsed + cooldownMillis) - System.currentTimeMillis();
+					if(remaining > 0){
+						ctx.sender().sendMessage(config.formatError(config.parse(
+								config.getCooldownMessage(), String.valueOf(remaining / 1000)
+						)));
+						return;
+					}
+
+					cooldowns
+							.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
+							.put(key, System.currentTimeMillis());
 				}
 				try {
 					method.invoke(instance, buildArgs(method, ctx));
