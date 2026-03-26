@@ -1,8 +1,10 @@
 name: Deploy Docs to GitHub Pages
 
 on:
-  release:
-    types: [ published ]
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -32,7 +34,7 @@ jobs:
         working-directory: ./docs
         run: bun run build
 
-      - uses: actions/upload-pages-artifact@v2
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: ./docs/build
 
@@ -43,5 +45,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v1
+      - uses: actions/deploy-pages@v4
         id: deployment
