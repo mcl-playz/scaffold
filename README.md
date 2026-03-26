@@ -28,7 +28,7 @@ Add Scaffold as a dependency in your `pom.xml`:
 <dependency>
 <groupId>com.github.mcl-playz</groupId>
     <artifactId>scaffold</artifactId>
-    <version>LATEST</version>
+<version>v2.0.0</version>
 </dependency>
 ```
 
@@ -43,7 +43,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.mcl-playz:scaffold:+'
+    implementation 'com.github.mcl-playz:scaffold:v2.0.0'
 }
 ```
 
