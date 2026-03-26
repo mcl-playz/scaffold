@@ -6,11 +6,7 @@ A lightweight, annotation-driven command framework for Bukkit/Spigot plugins.
 [![Maven](https://img.shields.io/badge/build-Maven-red.svg)](https://maven.apache.org/)
 [![JitPack](https://jitpack.io/v/mcl-playz/scaffold.svg)](https://jitpack.io/#mcl-playz/scaffold)
 
----
-
-📖 **[Read the full documentation](https://mcl-playz.github.io/Scaffold)**
-
----
+> this project is made by humans
 
 ## Quick Start
 
