@@ -55,4 +55,4 @@ manager.registerCommand(new MyCommand());
 ```
 
 For full usage, annotation reference, and configuration options, see
-the [docs site](https://mcl-playz.github.io/Scaffold).
+the [docs site](https://mcl-playz.github.io/scaffold/).
